@@ -17,6 +17,8 @@ class Config:
     report_limit: int
     daily_post_limit: int
     allowed_channels: frozenset[int]
+    webapp_url: str = ""   # public https URL of the Mini App, e.g. https://xxx.up.railway.app
+    web_port: int = 0      # port for the Mini App web server (Railway sets PORT)
 
 
 def _ids(value: str) -> frozenset[int]:
@@ -36,4 +38,15 @@ def load_config() -> Config:
         report_limit=int(os.getenv("REPORT_LIMIT", "3")),
         daily_post_limit=int(os.getenv("DAILY_POST_LIMIT", "5")),
         allowed_channels=_ids(os.getenv("ALLOWED_CHANNELS", "")),
+        webapp_url=_webapp_url(),
+        web_port=int(os.getenv("PORT", "0") or 0),
     )
+
+
+def _webapp_url() -> str:
+    url = os.getenv("WEBAPP_URL", "").strip().rstrip("/")
+    if not url and os.getenv("RAILWAY_PUBLIC_DOMAIN"):
+        url = "https://" + os.environ["RAILWAY_PUBLIC_DOMAIN"]
+    if url and not url.startswith("http"):
+        url = "https://" + url
+    return url

@@ -172,6 +172,14 @@ class Database:
     async def set_listing_status(self, listing_id: int, status: str) -> None:
         await self.exec("UPDATE listings SET status=? WHERE id=?", (status, listing_id))
 
+    async def active_listings(self, limit: int = 300, before_id: int | None = None) -> list[sqlite3.Row]:
+        if before_id:
+            return await self.all(
+                "SELECT * FROM listings WHERE status='active' AND id<? ORDER BY id DESC LIMIT ?",
+                (before_id, limit))
+        return await self.all("SELECT * FROM listings WHERE status='active' ORDER BY id DESC LIMIT ?",
+                              (limit,))
+
     async def user_listings(self, user_id: int, limit: int = 10) -> list[sqlite3.Row]:
         return await self.all(
             "SELECT * FROM listings WHERE owner_id=? AND status='active' ORDER BY id DESC LIMIT ?",

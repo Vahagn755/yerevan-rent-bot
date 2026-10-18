@@ -31,6 +31,11 @@ T: dict[str, dict[str, str]] = {
               "/my — my listings\n/pause, /resume — notifications off/on\n"
               "/lang — language\n/cancel — cancel",
     },
+    "open_app": {"hy": "Բացել", "ru": "Открыть", "en": "Open"},
+    "open_app_btn": {"hy": "🏠 Բացել հավելվածը", "ru": "🏠 Открыть приложение", "en": "🏠 Open the app"},
+    "open_app_hint": {"hy": "Ավելի հարմար է հավելվածում՝ բոլոր հայտարարությունները, ֆիլտրը և տեղադրումը մեկ տեղում։",
+                      "ru": "В приложении удобнее: все объявления, фильтр и размещение в одном месте.",
+                      "en": "The app is handier: all listings, your filter and posting in one place."},
     # main menu
     "btn_filter": {"hy": "🔎 Իմ ֆիլտրը", "ru": "🔎 Мой фильтр", "en": "🔎 My filter"},
     "btn_post": {"hy": "➕ Տեղադրել", "ru": "➕ Разместить", "en": "➕ Post listing"},

@@ -3,8 +3,10 @@ from html import escape
 from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message,
+                           WebAppInfo)
 
+from ..config import Config
 from ..db import Database
 from ..keyboards import lang_kb, main_menu
 from ..texts import LANGS, t, variants
@@ -14,11 +16,15 @@ router = Router(name="start")
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext, db: Database, lang: str,
-                    is_new_user: bool) -> None:
+                    is_new_user: bool, cfg: Config) -> None:
     await state.clear()
     paused = await db.is_paused(message.from_user.id)
     name = escape(message.from_user.first_name or "")
     await message.answer(t("welcome", lang, name=name), reply_markup=main_menu(lang, paused))
+    if cfg.webapp_url:
+        await message.answer(t("open_app_hint", lang), reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=t("open_app_btn", lang),
+                                                   web_app=WebAppInfo(url=cfg.webapp_url))]]))
     if is_new_user:
         await message.answer(t("choose_lang", lang), reply_markup=lang_kb())
 
