@@ -115,6 +115,7 @@ async def api_me(request: web.Request) -> web.Response:
         "filter": filter_json(flt),
         "districts": [{"key": k, "name": district_name(k, lang),
                        "names": {code: district_name(k, code) for code in LANGS}} for k in DISTRICTS],
+        "stats": await db.feed_stats(),
         "amd_per_usd": cfg.amd_per_usd,
         "daily_post_limit": cfg.daily_post_limit,
     })
@@ -157,7 +158,14 @@ async def api_save_filter(request: web.Request) -> web.Response:
 
 async def api_listings(request: web.Request) -> web.Response:
     db, user, lang = request.app[DB], request["user"], request["lang"]
+    if ids := request.query.get("ids"):
+        wanted = [int(x) for x in ids.split(",") if x.isdigit()]
+        rows = await db.listings_by_ids(wanted)
+        return web.json_response({"items": [serialize(r, lang, user["id"]) for r in rows], "next": None})
+
     scope = request.query.get("scope", "feed")
+    district = request.query.get("district")
+    district = district if district in DISTRICTS else None
     try:
         before = int(request.query.get("before", "0")) or None
     except ValueError:
@@ -171,6 +179,8 @@ async def api_listings(request: web.Request) -> web.Response:
         if not rows:
             break
         for row in rows:
+            if district and row["district"] != district:
+                continue
             if flt is None or matches(flt, row):
                 items.append(serialize(row, lang, user["id"]))
                 if len(items) >= PAGE_SIZE:

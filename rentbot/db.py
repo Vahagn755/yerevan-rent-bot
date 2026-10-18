@@ -180,6 +180,21 @@ class Database:
         return await self.all("SELECT * FROM listings WHERE status='active' ORDER BY id DESC LIMIT ?",
                               (limit,))
 
+    async def listings_by_ids(self, ids: list[int]) -> list[sqlite3.Row]:
+        ids = ids[:100]
+        if not ids:
+            return []
+        marks = ",".join("?" * len(ids))
+        return await self.all(
+            f"SELECT * FROM listings WHERE status='active' AND id IN ({marks}) ORDER BY id DESC", tuple(ids))
+
+    async def feed_stats(self) -> dict[str, int]:
+        day_ago = int(time.time()) - 86400
+        row = await self.one(
+            "SELECT COUNT(*) AS active, SUM(CASE WHEN created>=? THEN 1 ELSE 0 END) AS today "
+            "FROM listings WHERE status='active'", (day_ago,))
+        return {"active": row["active"] or 0, "today": row["today"] or 0}
+
     async def user_listings(self, user_id: int, limit: int = 10) -> list[sqlite3.Row]:
         return await self.all(
             "SELECT * FROM listings WHERE owner_id=? AND status='active' ORDER BY id DESC LIMIT ?",
