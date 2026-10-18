@@ -71,6 +71,7 @@ class ParsedListing:
     phone: str | None
     pets: int | None  # 1 allowed, 0 not allowed, None unknown
     agent: bool = False
+    details: dict | None = None
 
 
 def to_number(raw: str) -> float:
@@ -224,8 +225,74 @@ def parse_listing(text: str, amd_per_usd: float) -> ParsedListing | None:
     district = parse_district(text)
     if not price or (rooms is None and district is None):
         return None
-    return ParsedListing(price, rooms, district, normalize_phone(text), parse_pets(text), is_agent(text))
+    return ParsedListing(price, rooms, district, normalize_phone(text), parse_pets(text), is_agent(text),
+                         parse_details(text))
 
 
 def text_hash(text: str) -> str:
     return hashlib.sha1(re.sub(r"\s+", " ", text.lower()).strip().encode()).hexdigest()
+
+
+# ---------- extra details for the structured card ----------
+_AREA = re.compile(r"(\d{2,3}(?:[.,]\d)?)\s?(?:м²|м2|кв\.?\s?м|квм|մ²|մ2|ք\.?\s?մ|sq\.?\s?m|m²|m2|sqm)")
+_FLOOR_WORD = r"(?:этаж|հարկ|floor)"
+_FLOOR_OF = re.compile(r"(\d{1,2})\s?(?:-?(?:й|ой|ий|րդ|th|st|nd|rd))?\s?(?:/|из|of|-ից)\s?(\d{1,2})")
+_FLOOR_NEAR = re.compile(_FLOOR_WORD + r"[^\d\n]{0,12}(\d{1,2})(?:[^\d\n]{1,8}(\d{1,2}))?")
+_FLOOR_BEFORE = re.compile(r"(\d{1,2})\s?(?:/\s?(\d{1,2}))?\s?-?(?:й|ой|ий|րդ|th|st|nd|rd)?\s?" + _FLOOR_WORD
+                           + r"\w*(?:\s?(?:из|of|/)\s?(\d{1,2}))?")
+_ADDRESS_LABEL = re.compile(r"(?:расположение|адрес|местоположение|հասցե|գտնվում է|address|location)\s*[:\-–]\s*([^\n]{3,60})")
+_STREET = re.compile(r"((?:ул\.|улица|пр\.|проспект|փող\.|փողոց|պող\.|պողոտա)\s?[^\n,;()]{2,30}"
+                     r"|[^\s,;()]{3,25}\s(?:փողոց|փող\.|պողոտա|street|st\.|avenue|ave\.?))")
+_DEPOSIT_WORD = r"(?:депозит|залог|ավանդ|deposit)"
+_NO_DEPOSIT = re.compile(r"(?:без|нет|առանց|no)\s?" + _DEPOSIT_WORD + r"|" + _DEPOSIT_WORD + r"[^\n]{0,12}(?:нет|не нужен|չկա|չի պահանջվում|none)"
+                         r"|(?:🔴|❌)\s*" + _DEPOSIT_WORD)
+_KIDS_WORD = r"(?:дет|երեխա|kids|children)"
+_KIDS_NO = re.compile(r"(?:🔴|❌|⛔|без|нельзя с|առանց|no)\s*" + _KIDS_WORD)
+_KIDS_YES = re.compile(r"(?:🟢|✅|можно с|с|երեխաներով)\s*" + _KIDS_WORD
+                       + r"|(?:kids|children)\s(?:welcome|allowed|ok)")
+_COMMISSION = re.compile(r"(?:комисси\w*|միջնորդավճար\w*|commission)[^\d\n]{0,12}(\d{1,3})\s?%")
+
+
+def _clean_address(s: str) -> str:
+    s = re.sub(r"^[^\w]+", "", s.strip()).rstrip(" .,;:")
+    return s[:45]
+
+
+def parse_details(text: str) -> dict:
+    """Floor, area, address, deposit, kids and commission — whatever the post mentions."""
+    low = text.lower()
+    d: dict = {}
+    if m := _AREA.search(low):
+        area = float(m.group(1).replace(",", "."))
+        if 10 <= area <= 1000:
+            d["area"] = round(area)
+    floor_line = next((ln for ln in low.splitlines() if re.search(_FLOOR_WORD, ln)), "")
+    for rx in (_FLOOR_OF, _FLOOR_BEFORE, _FLOOR_NEAR):  # first reading that makes sense wins
+        m = rx.search(floor_line)
+        if not m:
+            continue
+        groups = [g for g in m.groups() if g]
+        floor, floors = int(groups[0]), (int(groups[1]) if len(groups) > 1 else None)
+        if 0 < floor <= 40 and (floors is None or floor <= floors <= 40):
+            d["floor"] = floor
+            if floors:
+                d["floors"] = floors
+            break
+    for line in text.splitlines():  # keep the original letters, search case-insensitively
+        if m := _ADDRESS_LABEL.search(line.lower()):
+            d["address"] = _clean_address(line[m.start(1):m.end(1)])
+            break
+    else:
+        for line in text.splitlines():
+            if m := _STREET.search(line.lower()):
+                d["address"] = _clean_address(line[m.start(1):m.end(1)])
+                break
+    if re.search(_DEPOSIT_WORD, low):
+        d["deposit"] = not _NO_DEPOSIT.search(low)
+    if _KIDS_NO.search(low):
+        d["kids"] = False
+    elif _KIDS_YES.search(low):
+        d["kids"] = True
+    if m := _COMMISSION.search(low):
+        d["commission"] = int(m.group(1))
+    return d

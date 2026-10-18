@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS listings(
     phone TEXT,
     photo_id TEXT,
     photos TEXT NOT NULL DEFAULT '',
+    details TEXT NOT NULL DEFAULT '{}',   -- JSON: floor, floors, area, address, deposit, kids, commission
     link TEXT,
     text_hash TEXT,
     status TEXT NOT NULL DEFAULT 'active',  -- active | rented | blocked | deleted
@@ -60,7 +61,7 @@ CREATE TABLE IF NOT EXISTS blacklist(
 """
 
 LISTING_FIELDS = ("source", "owner_id", "district", "rooms", "price_amount", "currency",
-                  "price_usd", "pets", "agent", "description", "phone", "photo_id", "photos", "link", "text_hash")
+                  "price_usd", "pets", "agent", "description", "phone", "photo_id", "photos", "details", "link", "text_hash")
 
 
 def _lang_from_code(code: str | None) -> str:
@@ -90,6 +91,8 @@ class Database:
             self._conn.execute("ALTER TABLE listings ADD COLUMN agent INTEGER NOT NULL DEFAULT 0")
         if "photos" not in cols:
             self._conn.execute("ALTER TABLE listings ADD COLUMN photos TEXT NOT NULL DEFAULT ''")
+        if "details" not in cols:
+            self._conn.execute("ALTER TABLE listings ADD COLUMN details TEXT NOT NULL DEFAULT '{}'")
         self._conn.commit()
 
     async def close(self) -> None:

@@ -16,7 +16,7 @@ from .db import Database
 from .districts import DISTRICTS, district_name
 from .matching import join_set, matches, parse_set
 from .parser import format_phone, normalize_phone, parse_price_input
-from .render import format_price
+from .render import format_price, load_details
 from .texts import LANGS, t
 from .webauth import validate_init_data
 
@@ -58,6 +58,7 @@ def serialize(row: Mapping, lang: str, viewer_id: int) -> dict:
         "price_usd": row["price_usd"],
         "pets": row["pets"],
         "agent": bool(row["agent"]),
+        "details": load_details(row),
         "description": row["description"],
         "phone": format_phone(row["phone"]) if row["phone"] else None,
         "phone_raw": row["phone"],
@@ -234,7 +235,7 @@ async def api_create(request: web.Request) -> web.Response:
     item = NewListing(district=district, rooms=rooms, price_amount=price.amount,
                       currency=price.currency, price_usd=price.usd,
                       pets=int(form.get("pets") in ("1", "true", "on")),
-                      description=description, phone=phone)
+                      description=description, phone=phone, details=_form_details(form))
     if err := await precheck_listing(db, cfg, user["id"], item):
         raise ApiError(409, err)
 
@@ -254,6 +255,31 @@ async def api_create(request: web.Request) -> web.Response:
     listing_id = await publish_listing(bot, db, user["id"], item, on_sent)
     row = await db.get_listing(listing_id)
     return web.json_response({"item": serialize(row, lang, user["id"])}, status=201)
+
+
+def _small_int(value, lo: int, hi: int) -> int | None:
+    try:
+        n = int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+    return n if lo <= n <= hi else None
+
+
+def _form_details(form) -> dict:
+    d: dict = {}
+    if floor := _small_int(form.get("floor"), 1, 40):
+        d["floor"] = floor
+        if (floors := _small_int(form.get("floors"), 1, 40)) and floors >= floor:
+            d["floors"] = floors
+    if area := _small_int(form.get("area"), 10, 1000):
+        d["area"] = area
+    if address := str(form.get("address", "")).strip()[:45]:
+        d["address"] = address
+    if form.get("deposit") in ("0", "1"):
+        d["deposit"] = form.get("deposit") == "1"
+    if form.get("kids") in ("0", "1"):
+        d["kids"] = form.get("kids") == "1"
+    return d
 
 
 async def api_rented(request: web.Request) -> web.Response:

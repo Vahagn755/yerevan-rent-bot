@@ -126,7 +126,15 @@ nav.tabs .post-tab .plus svg { width: 20px; height: 20px; color: var(--apricot-i
 .badge.agent { color: var(--danger); background: transparent; border: 1px solid currentColor; }
 .desc { margin: 10px 0 0; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .desc.open { -webkit-line-clamp: unset; }
-.phone { margin-top: 8px; color: var(--muted); font-size: 15px; }
+.phone { margin-top: 10px; font-weight: 600; font-size: 15px; }
+.addr { margin-top: 2px; font-size: 15px; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; }
+.facts div { background: var(--sunk); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.facts dt { font-size: 12px; color: var(--muted); }
+.facts dd { margin: 2px 0 0; font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+.orig { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.orig summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.orig p { white-space: pre-line; margin: 8px 0 0; }
 .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 14px; }
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 15px; text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn.primary { background: var(--apricot); border-color: var(--apricot); color: var(--apricot-ink); flex: 1; }
@@ -136,6 +144,8 @@ nav.tabs .post-tab .plus svg { width: 20px; height: 20px; color: var(--apricot-i
 .btn:disabled { opacity: .55; }
 .card.gone { opacity: .45; transition: opacity .3s; }
 .skeleton { height: 360px; border-radius: 20px; background: var(--sunk); }
+.focus-title { font: 700 19px/1.2 var(--serif); margin: 4px 0 10px; }
+#focus { margin-bottom: 22px; }
 .more { margin: 18px auto 0; display: flex; max-width: 320px; }
 
 /* ---------- empty states ---------- */
@@ -203,6 +213,7 @@ textarea.input { min-height: 120px; resize: vertical; }
         <circle cx="62" cy="88" r="3.5" fill="#2E2430"/>
       </svg>
     </header>
+    <div id="focus" class="hidden"></div>
     <div class="toolbar">
       <div class="seg" role="group">
         <button type="button" data-scope="feed" aria-pressed="true" data-t="seg_mine"></button>
@@ -258,6 +269,8 @@ textarea.input { min-height: 120px; resize: vertical; }
     <div data-step="1">
       <div class="field"><span class="label" data-t="p_district"></span><div class="chips" id="p-district"></div></div>
       <div class="field"><span class="label" data-t="p_rooms"></span><div class="chips rooms" id="p-rooms"></div></div>
+      <div class="field"><label class="label" for="p-address" data-t="p_address"></label>
+        <input class="input" id="p-address" maxlength="45"></div>
     </div>
 
     <div data-step="2" class="hidden">
@@ -271,6 +284,27 @@ textarea.input { min-height: 120px; resize: vertical; }
           </div>
         </div>
         <div class="hint" id="p-amd"></div>
+      </div>
+      <div class="field">
+        <div class="row">
+          <label style="flex:1"><span class="label" data-t="p_floor"></span><input class="input" id="p-floor" type="number" inputmode="numeric" min="1" max="40" placeholder="5"></label>
+          <label style="flex:1"><span class="label" data-t="p_floors"></span><input class="input" id="p-floors" type="number" inputmode="numeric" min="1" max="40" placeholder="9"></label>
+          <label style="flex:1"><span class="label" data-t="p_area"></span><input class="input" id="p-area" type="number" inputmode="numeric" min="10" max="1000" placeholder="70"></label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label" data-t="p_deposit"></span>
+        <div class="chips" id="p-deposit">
+          <button type="button" class="chip" data-v="1" aria-pressed="false" data-t="deposit_yes"></button>
+          <button type="button" class="chip" data-v="0" aria-pressed="false" data-t="deposit_no"></button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label" data-t="p_kids"></span>
+        <div class="chips" id="p-kids">
+          <button type="button" class="chip" data-v="1" aria-pressed="false" data-t="allowed"></button>
+          <button type="button" class="chip" data-v="0" aria-pressed="false" data-t="not_allowed"></button>
+        </div>
       </div>
       <div class="field">
         <span class="label" data-t="p_pets"></span>
@@ -350,6 +384,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 "use strict";
 const I18N = {
   hy: {
+    opened: "Հայտարարությունը, որ բացեցիր", floor: "Հարկ", area: "Մակերես", m2: "մ²", deposit: "Ավանդ", deposit_yes: "Պահանջվում է", deposit_no: "Չկա", pets: "Կենդանիներ", kids: "Երեխաներ", allowed: "Կարելի է", not_allowed: "Ոչ", agent_pct: "Միջնորդ, {p}% միջնորդավճար", full_text: "Ամբողջական տեքստը", p_floor: "Հարկ", p_floors: "Շենքի հարկերը", p_area: "Մակերես, մ²", p_address: "Հասցե (փողոց)", p_address_ph: "օր. Կոմիտաս 12", p_kids: "Երեխաներ", p_deposit: "Ավանդ", 
     title: "Վարձով տուն Երևանում", hello: "Բարև, {name}",
     stat_active: "ակտիվ հայտարարություն", stat_today: "նոր՝ վերջին 24 ժամում",
     tab_feed: "Գլխավոր", tab_filter: "Ֆիլտր", tab_post: "Տեղադրել", tab_my: "Իմը",
@@ -390,6 +425,7 @@ const I18N = {
     open_bot: "Այս էջը բացիր Telegram-ում՝ բոտի «Բացել» կոճակով։"
   },
   ru: {
+    opened: "Объявление, которое ты открыл", floor: "Этаж", area: "Площадь", m2: "м²", deposit: "Депозит", deposit_yes: "Нужен", deposit_no: "Нет", pets: "Животные", kids: "Дети", allowed: "Можно", not_allowed: "Нельзя", agent_pct: "Посредник, комиссия {p}%", full_text: "Полный текст", p_floor: "Этаж", p_floors: "Этажей в доме", p_area: "Площадь, м²", p_address: "Адрес (улица)", p_address_ph: "напр. Комитаса 12", p_kids: "Дети", p_deposit: "Депозит", 
     title: "Аренда квартир в Ереване", hello: "Привет, {name}",
     stat_active: "активных объявлений", stat_today: "новых за 24 часа",
     tab_feed: "Главная", tab_filter: "Фильтр", tab_post: "Разместить", tab_my: "Моё",
@@ -430,6 +466,7 @@ const I18N = {
     open_bot: "Открой эту страницу в Telegram кнопкой «Открыть» в боте."
   },
   en: {
+    opened: "The listing you opened", floor: "Floor", area: "Area", m2: "m²", deposit: "Deposit", deposit_yes: "Required", deposit_no: "None", pets: "Pets", kids: "Kids", allowed: "Allowed", not_allowed: "No", agent_pct: "Agent, {p}% commission", full_text: "Full text", p_floor: "Floor", p_floors: "Floors in building", p_area: "Area, m²", p_address: "Address (street)", p_address_ph: "e.g. Komitas 12", p_kids: "Kids", p_deposit: "Deposit", 
     title: "Rentals in Yerevan", hello: "Hi, {name}",
     stat_active: "active listings", stat_today: "new in 24 hours",
     tab_feed: "Home", tab_filter: "Filter", tab_post: "Post", tab_my: "Mine",
@@ -534,6 +571,7 @@ function applyText() {
   document.documentElement.lang = state.lang;
   $$("[data-t]").forEach(el => { el.textContent = t(el.dataset.t); });
   $("#p-desc").placeholder = t("p_desc_ph");
+  $("#p-address").placeholder = t("p_address_ph");
   if (state.me) {
     $("#hello").textContent = t("hello", { name: state.me.user.first_name || "" });
     const s = state.me.stats || { active: 0, today: 0 };
@@ -592,11 +630,18 @@ function cardHTML(it, opts = {}) {
         <button type="button" class="slide-btn next" data-act="next" aria-label="›">›</button>` : "")
     : `<div class="tuff-bg"><span>${esc(dname(it.district) || "Երևան")}</span></div>`;
   const meta = [roomsLabel(it.rooms), dname(it.district)].filter(Boolean).join(", ");
+  const d = it.details || {};
+  const facts = [];
+  if (d.floor) facts.push(["🏢", t("floor"), d.floors ? `${d.floor} / ${d.floors}` : d.floor]);
+  if (d.area) facts.push(["📐", t("area"), `${d.area} ${t("m2")}`]);
+  if (d.deposit !== undefined) facts.push([d.deposit ? "🔐" : "🔓", t("deposit"), t(d.deposit ? "deposit_yes" : "deposit_no")]);
+  if (it.pets === 1 || it.pets === 0) facts.push(["🐾", t("pets"), t(it.pets ? "allowed" : "not_allowed")]);
+  if (d.kids !== undefined) facts.push(["👶", t("kids"), t(d.kids ? "allowed" : "not_allowed")]);
+  const factsHTML = facts.length ? `<dl class="facts">${facts.map(([i, k, v]) =>
+    `<div><dt>${i} ${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : "";
   const badges = [];
   if (it.source === "bot") badges.push(`<span class="badge owner">${t("owner")}</span>`);
-  else if (it.agent) badges.push(`<span class="badge agent">${t("agent")}</span>`);
-  if (it.pets === 1) badges.push(`<span class="badge">${t("pets_yes")}</span>`);
-  if (it.pets === 0) badges.push(`<span class="badge">${t("pets_no")}</span>`);
+  else if (it.agent) badges.push(`<span class="badge agent">${d.commission ? t("agent_pct", { p: d.commission }) : t("agent")}</span>`);
   const acts = [];
   if (opts.mine) {
     acts.push(`<button type="button" class="btn danger" data-act="rented" style="flex:1">${t("rented")}</button>`);
@@ -611,10 +656,13 @@ function cardHTML(it, opts = {}) {
     <div class="media">${media}<span class="price-tag">${esc(it.price)}</span>${fav}</div>
     <div class="body">
       <div class="meta">${esc(meta) || "&nbsp;"}</div>
+      ${d.address ? `<div class="addr">📍 ${esc(d.address)}</div>` : ""}
       <div class="sub">${ago(it.created)}</div>
       ${badges.length ? `<div class="badges">${badges.join("")}</div>` : ""}
-      ${it.description ? `<p class="desc">${esc(it.description)}</p>` : ""}
-      ${it.phone && it.source === "bot" ? `<div class="phone">${esc(it.phone)}</div>` : ""}
+      ${factsHTML}
+      ${it.description && it.source === "bot" ? `<p class="desc">${esc(it.description)}</p>` : ""}
+      ${it.description && it.source !== "bot" ? `<details class="orig"><summary>${t("full_text")}</summary><p>${esc(it.description)}</p></details>` : ""}
+      ${it.phone ? `<div class="phone">📞 ${esc(it.phone)}</div>` : ""}
       ${acts.length ? `<div class="actions">${acts.join("")}</div>` : ""}
     </div></article>`;
 }
@@ -649,6 +697,7 @@ function onCardClick(e) {
   }
 }
 $("#feed-list").addEventListener("click", onCardClick);
+$("#focus").addEventListener("click", onCardClick);
 document.addEventListener("scroll", e => {
   const s = e.target; if (!(s instanceof Element) || !s.classList.contains("slides")) return;
   const c = s.parentElement.querySelector(".count"); if (!c) return;
@@ -807,6 +856,8 @@ function renderPostChips() {
 toggleChip($("#p-district"), true);
 toggleChip($("#p-rooms"), true);
 toggleChip($("#p-pets"), true);
+toggleChip($("#p-deposit"), true);
+toggleChip($("#p-kids"), true);
 $("#p-district").addEventListener("change", () => { state.post.district = pressed($("#p-district"), "v")[0]; });
 $("#p-rooms").addEventListener("change", () => { state.post.rooms = Number(pressed($("#p-rooms"), "v")[0]); });
 $("#p-pets").addEventListener("change", () => { state.post.pets = Number(pressed($("#p-pets"), "v")[0]); });
@@ -868,13 +919,21 @@ function stepError(step) {
   if (step === 4) return $("#p-phone").value.replace(/\D/g, "").length >= 8 ? null : "bad_phone";
   return null;
 }
+function postDetails() {
+  const num = s => Number($(s).value) || undefined;
+  const pick = s => { const v = pressed($(s), "v")[0]; return v === undefined ? undefined : v === "1"; };
+  const d = { floor: num("#p-floor"), floors: num("#p-floors"), area: num("#p-area"),
+    address: $("#p-address").value.trim() || undefined, deposit: pick("#p-deposit"), kids: pick("#p-kids") };
+  Object.keys(d).forEach(k => d[k] === undefined && delete d[k]);
+  return d;
+}
 function renderPreview() {
   const p = state.post, v = Number($("#p-price").value), r = state.me.amd_per_usd;
   const price = p.cur === "USD" ? `$${fmt(v)}` : `${fmt(v)} ֏ (≈ $${fmt(v / r)})`;
   const digits = $("#p-phone").value.replace(/\D/g, "");
   const item = { id: 0, source: "bot", district: p.district, rooms: p.rooms, price, pets: p.pets,
     description: $("#p-desc").value.trim(), phone: $("#p-phone").value.trim() || null, phone_raw: digits || null,
-    link: null, photo: false, created: Date.now() / 1000 };
+    link: null, photo: false, created: Date.now() / 1000, details: postDetails() };
   $("#p-card").innerHTML = `<div class="grid" style="grid-template-columns:1fr">${cardHTML(item, { preview: true, photoUrl: p.photoUrl })}</div>`;
 }
 function goStep(n) {
@@ -900,6 +959,9 @@ async function publish() {
   fd.append("district", p.district); fd.append("rooms", p.rooms); fd.append("price", $("#p-price").value.trim());
   fd.append("currency", p.cur === "USD" ? "$" : "֏"); fd.append("pets", p.pets ? "1" : "0");
   fd.append("description", $("#p-desc").value.trim()); fd.append("phone", $("#p-phone").value.trim());
+  const d = postDetails();
+  ["floor", "floors", "area", "address"].forEach(k => d[k] !== undefined && fd.append(k, d[k]));
+  ["deposit", "kids"].forEach(k => d[k] !== undefined && fd.append(k, d[k] ? "1" : "0"));
   if (p.photo) fd.append("photo", p.photo, "photo.jpg");
   const btn = $("#p-next"); btn.disabled = true; btn.textContent = t("publishing");
   try {
@@ -914,7 +976,8 @@ function resetPost() {
   state.post = { district: null, rooms: null, cur: state.post.cur, pets: 0, photo: null, photoUrl: null };
   renderPostChips();
   $$("#p-pets .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === "0")));
-  ["#p-price", "#p-desc", "#p-phone"].forEach(s => { $(s).value = ""; });
+  ["#p-price", "#p-desc", "#p-phone", "#p-address", "#p-floor", "#p-floors", "#p-area"].forEach(s => { $(s).value = ""; });
+  $$("#p-deposit .chip, #p-kids .chip").forEach(c => c.setAttribute("aria-pressed", "false"));
   $("#p-count").textContent = "0"; $("#p-amd").textContent = "";
   state.step = 1;
 }
@@ -960,6 +1023,16 @@ async function boot() {
   renderPostChips();
   $("#tabs").classList.remove("hidden");
   show("feed");
+  const focus = Number(new URLSearchParams(location.search).get("l"));
+  if (focus) {
+    try {
+      const data = await api("/api/listings?ids=" + focus);
+      if (data.items.length) {
+        $("#focus").innerHTML = `<h2 class="focus-title">${t("opened")}</h2><div class="grid">${cardHTML(data.items[0])}</div>`;
+        $("#focus").classList.remove("hidden");
+      }
+    } catch (e) {}
+  }
 }
 boot();
 </script>

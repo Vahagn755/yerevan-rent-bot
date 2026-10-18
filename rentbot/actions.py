@@ -1,4 +1,5 @@
 """Business actions shared by the chat handlers and the Mini App API."""
+import json
 import logging
 import time
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ class NewListing:
     description: str
     phone: str
     photo_id: str | None = None
+    details: dict | None = None
 
 
 async def check_can_post(db: Database, cfg: Config, owner_id: int) -> str | None:
@@ -58,7 +60,8 @@ async def publish_listing(bot: Bot, db: Database, owner_id: int, item: NewListin
         source="bot", owner_id=owner_id, district=item.district, rooms=item.rooms,
         price_amount=item.price_amount, currency=item.currency, price_usd=item.price_usd,
         pets=item.pets, description=item.description[:DESC_MAX], phone=item.phone,
-        photo_id=item.photo_id, text_hash=listing_hash(item),
+        photo_id=item.photo_id, details=json.dumps(item.details or {}, ensure_ascii=False),
+        text_hash=listing_hash(item),
     )
     listing = await db.get_listing(listing_id)
 
@@ -105,6 +108,7 @@ async def import_post(bot: Bot, db: Database, cfg: Config, text: str, photo_ids:
         description=text[:IMPORT_DESC_MAX],
         phone=parsed.phone, photo_id=photo_ids[0] if photo_ids else None,
         photos=",".join(photo_ids[:10]), link=link, text_hash=h,
+        details=json.dumps(parsed.details or {}, ensure_ascii=False),
     )
     listing = await db.get_listing(listing_id)
 

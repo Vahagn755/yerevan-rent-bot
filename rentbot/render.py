@@ -1,4 +1,5 @@
 """Turn database rows into message text."""
+import json
 from collections.abc import Mapping
 from html import escape
 
@@ -19,30 +20,54 @@ def format_price(listing: Mapping) -> str:
     return f"${amount:,.0f}".replace(",", " ")
 
 
+def load_details(listing: Mapping) -> dict:
+    try:
+        return json.loads(listing["details"] or "{}")
+    except (KeyError, IndexError, ValueError, TypeError):
+        return {}
+
+
 def format_card(listing: Mapping, lang: str) -> str:
+    """A tidy card built from the parsed facts, not a copy of the original post."""
+    d = load_details(listing)
     head = []
     if listing["rooms"]:
         head.append(t("card_rooms", lang, n=listing["rooms"]))
     if listing["district"]:
         head.append(district_name(listing["district"], lang))
-    lines = [f"🏠 <b>{' · '.join(head) or '—'}</b>", f"💰 {format_price(listing)}"]
+    lines = [f"🏠 <b>{', '.join(head) or '—'}</b>", f"💰 <b>{format_price(listing)}</b>"]
+    if d.get("address"):
+        lines.append(f"📍 {escape(d['address'])}")
+    facts = []
+    if d.get("floor"):
+        facts.append(t("card_floor", lang, v=f"{d['floor']}/{d['floors']}" if d.get("floors") else d["floor"]))
+    if d.get("area"):
+        facts.append(t("card_area", lang, v=d["area"]))
+    if facts:
+        lines.append("   ".join(facts))
+    if "deposit" in d:
+        lines.append(t("card_deposit_yes" if d["deposit"] else "card_deposit_no", lang))
     if listing["pets"] == 1:
         lines.append(t("card_pets_yes", lang))
     elif listing["pets"] == 0:
         lines.append(t("card_pets_no", lang))
+    if "kids" in d:
+        lines.append(t("card_kids_yes" if d["kids"] else "card_kids_no", lang))
 
-    desc = (listing["description"] or "").strip()
-    if desc:
-        if len(desc) > DESC_LIMIT:
-            desc = desc[:DESC_LIMIT].rstrip() + "…"
-        lines += ["", escape(desc)]
-    if listing["phone"] and listing["source"] == "bot":
-        lines += ["", f"📞 {format_phone(listing['phone'])}"]
+    if listing["source"] == "bot":  # the owner's own words; imported posts are summarised above instead
+        desc = (listing["description"] or "").strip()
+        if desc:
+            if len(desc) > DESC_LIMIT:
+                desc = desc[:DESC_LIMIT].rstrip() + "…"
+            lines += ["", f"<i>{escape(desc)}</i>"]
+    lines.append("")
+    if listing["phone"]:
+        lines.append(f"📞 {format_phone(listing['phone'])}")
     if listing["source"] == "bot":
         lines.append(t("card_owner", lang))
     elif listing["agent"]:
-        lines.append(t("card_agent", lang))
-    return "\n".join(lines)
+        lines.append(t("card_agent_pct", lang, p=d["commission"]) if d.get("commission") else t("card_agent", lang))
+    return "\n".join(lines).rstrip()
 
 
 def _price_range(flt: Mapping, lang: str) -> str:

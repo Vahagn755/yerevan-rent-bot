@@ -7,6 +7,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand, MenuButtonCommands, MenuButtonWebApp, WebAppInfo
 
+from . import keyboards
 from .config import load_config
 from .db import Database
 from .handlers import all_routers
@@ -42,6 +43,7 @@ async def main() -> None:
         await bot.set_my_commands([BotCommand(command=c, description=d) for c, d in COMMANDS[code]],
                                   language_code=code)
 
+    keyboards.WEBAPP["url"] = cfg.webapp_url
     runner = None
     if cfg.web_port:
         from .webapp import start_web

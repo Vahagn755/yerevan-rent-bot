@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
-                           ReplyKeyboardMarkup)
+                           ReplyKeyboardMarkup, WebAppInfo)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from .districts import DISTRICTS, district_name
@@ -84,13 +84,20 @@ def phone_kb(lang: str) -> ReplyKeyboardMarkup:
     )
 
 
+WEBAPP = {"url": ""}  # set at startup from the config
+
+
 def card_kb(lang: str, listing: Mapping) -> InlineKeyboardMarkup:
-    rows = [[
+    rows = []
+    if WEBAPP["url"]:
+        rows.append([InlineKeyboardButton(text=t("card_open_app", lang),
+                                          web_app=WebAppInfo(url=f"{WEBAPP['url']}/?l={listing['id']}"))])
+    if listing["link"]:
+        rows.append([InlineKeyboardButton(text=t("card_source", lang), url=listing["link"])])
+    rows.append([
         InlineKeyboardButton(text=t("rep_agent", lang), callback_data=f"rep:agent:{listing['id']}"),
         InlineKeyboardButton(text=t("rep_fake", lang), callback_data=f"rep:fake:{listing['id']}"),
-    ]]
-    if listing["link"]:
-        rows.insert(0, [InlineKeyboardButton(text=t("card_source", lang), url=listing["link"])])
+    ])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
