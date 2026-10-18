@@ -145,6 +145,8 @@ T: dict[str, dict[str, str]] = {
     "card_pets_no": {"hy": "🐾 Կենդանիներ՝ ոչ", "ru": "🐾 Животные: нельзя", "en": "🐾 Pets: no"},
     "card_owner": {"hy": "✅ Տեղադրել է սեփականատերը", "ru": "✅ Разместил владелец",
                    "en": "✅ Posted by the owner"},
+    "card_agent": {"hy": "🏢 Միջնորդ (միջնորդավճարով)", "ru": "🏢 Посредник (с комиссией)",
+                   "en": "🏢 Agent (charges a commission)"},
     "card_source": {"hy": "🔗 Բացել աղբյուրը", "ru": "🔗 Открыть источник", "en": "🔗 Open source"},
     "rep_agent": {"hy": "🏢 Միջնորդ է", "ru": "🏢 Посредник", "en": "🏢 Agent"},
     "rep_fake": {"hy": "🚫 Խաբեություն", "ru": "🚫 Мошенник", "en": "🚫 Scam"},

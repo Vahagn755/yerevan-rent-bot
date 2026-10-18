@@ -101,7 +101,8 @@ async def import_post(bot: Bot, db: Database, cfg: Config, text: str, photo_id: 
     listing_id = await db.add_listing(
         source="channel", district=parsed.district, rooms=parsed.rooms,
         price_amount=parsed.price.amount, currency=parsed.price.currency,
-        price_usd=parsed.price.usd, pets=parsed.pets, description=text[:IMPORT_DESC_MAX],
+        price_usd=parsed.price.usd, pets=parsed.pets, agent=int(parsed.agent),
+        description=text[:IMPORT_DESC_MAX],
         phone=parsed.phone, photo_id=photo_id, link=link, text_hash=h,
     )
     listing = await db.get_listing(listing_id)

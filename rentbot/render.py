@@ -40,6 +40,8 @@ def format_card(listing: Mapping, lang: str) -> str:
         lines += ["", f"📞 {format_phone(listing['phone'])}"]
     if listing["source"] == "bot":
         lines.append(t("card_owner", lang))
+    elif listing["agent"]:
+        lines.append(t("card_agent", lang))
     return "\n".join(lines)
 
 

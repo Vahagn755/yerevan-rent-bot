@@ -15,7 +15,7 @@ AMD_RANGE = (20_000, 10_000_000)
 NUM = r"(\d{1,3}(?:[  .,]\d{3})+|\d+)"
 MULT = r"(?:\s?(k|к|тыс\.?|հազ(?:ար)?\.?))?"
 USD_WORDS = r"(?:\$|usd|долл\w*|դոլար\w*|dollars?|у\.?\s?е\.?)"
-AMD_WORDS = r"(?:֏|amd|драм\w*|դրամ\w*|dram)"
+AMD_WORDS = r"(?:֏|amd\b|драм\w*|др(?:\.|(?!\w))|դրամ\w*|դր(?:\.|(?!\w))|dram)"
 
 _USD_BEFORE = re.compile(r"\$\s?" + NUM + MULT)
 _USD_AFTER = re.compile(NUM + MULT + r"\s?" + USD_WORDS)
@@ -69,6 +69,7 @@ class ParsedListing:
     district: str | None
     phone: str | None
     pets: int | None  # 1 allowed, 0 not allowed, None unknown
+    agent: bool = False
 
 
 def to_number(raw: str) -> float:
@@ -180,13 +181,27 @@ def parse_district(text: str) -> str | None:
     return best[1] if best else None
 
 
+_PETS_WORD = r"(?:живот|կենդանի|pets?\b)"
+_PETS_RED = re.compile(r"(?:🔴|❌|⛔|🚫)\s*" + _PETS_WORD)
+_PETS_GREEN = re.compile(r"(?:🟢|✅|✔️?)\s*" + _PETS_WORD)
+
+_AGENT = ["комисси", "агентств", "риелтор", "риэлтор", "միջնորդավճար", "գործակալություն", "commission",
+          "agency fee", "realtor"]
+
+
 def parse_pets(text: str) -> int | None:
     low = text.lower()
-    if any(w in low for w in _PETS_NO):
+    if _PETS_RED.search(low) or any(w in low for w in _PETS_NO):
         return 0
-    if any(w in low for w in _PETS_YES):
+    if _PETS_GREEN.search(low) or any(w in low for w in _PETS_YES):
         return 1
     return None
+
+
+def is_agent(text: str) -> bool:
+    """Posts that mention a commission or an agency come from intermediaries."""
+    low = text.lower()
+    return any(w in low for w in _AGENT)
 
 
 def is_offer(text: str) -> bool:
@@ -203,7 +218,7 @@ def parse_listing(text: str, amd_per_usd: float) -> ParsedListing | None:
     district = parse_district(text)
     if not price or (rooms is None and district is None):
         return None
-    return ParsedListing(price, rooms, district, normalize_phone(text), parse_pets(text))
+    return ParsedListing(price, rooms, district, normalize_phone(text), parse_pets(text), is_agent(text))
 
 
 def text_hash(text: str) -> str:

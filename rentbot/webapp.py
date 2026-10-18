@@ -51,6 +51,7 @@ def serialize(row: Mapping, lang: str, viewer_id: int) -> dict:
         "price": format_price(row),
         "price_usd": row["price_usd"],
         "pets": row["pets"],
+        "agent": bool(row["agent"]),
         "description": row["description"],
         "phone": format_phone(row["phone"]) if row["phone"] else None,
         "phone_raw": row["phone"],

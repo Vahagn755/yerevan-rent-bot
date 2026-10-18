@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS listings(
     currency TEXT,
     price_usd REAL,
     pets INTEGER,
+    agent INTEGER NOT NULL DEFAULT 0,
     description TEXT NOT NULL DEFAULT '',
     phone TEXT,
     photo_id TEXT,
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS blacklist(
 """
 
 LISTING_FIELDS = ("source", "owner_id", "district", "rooms", "price_amount", "currency",
-                  "price_usd", "pets", "description", "phone", "photo_id", "link", "text_hash")
+                  "price_usd", "pets", "agent", "description", "phone", "photo_id", "link", "text_hash")
 
 
 def _lang_from_code(code: str | None) -> str:
@@ -83,6 +84,9 @@ class Database:
         self._conn = sqlite3.connect(self.path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(SCHEMA)
+        cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(listings)")}
+        if "agent" not in cols:  # databases created before the column existed
+            self._conn.execute("ALTER TABLE listings ADD COLUMN agent INTEGER NOT NULL DEFAULT 0")
         self._conn.commit()
 
     async def close(self) -> None:

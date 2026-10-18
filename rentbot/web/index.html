@@ -116,6 +116,7 @@ nav.tabs .post-tab .plus svg { width: 20px; height: 20px; color: var(--apricot-i
 .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .badge { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--sunk); }
 .badge.owner { color: var(--ok); background: transparent; border: 1px solid currentColor; }
+.badge.agent { color: var(--danger); background: transparent; border: 1px solid currentColor; }
 .desc { margin: 10px 0 0; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .desc.open { -webkit-line-clamp: unset; }
 .phone { margin-top: 8px; color: var(--muted); font-size: 15px; }
@@ -354,7 +355,7 @@ const I18N = {
     rep_title: "Ինչն է սխալ", rep_msg: "3 բողոքից հետո համարը սև ցուցակ է ընկնում։",
     rep_agent: "Միջնորդ է", rep_fake: "Խաբեություն",
     rep_ok: "Շնորհակալություն, բողոքն ընդունված է", rep_already: "Արդեն բողոքել ես", rep_own: "Սա քո հայտարարությունն է",
-    pets_yes: "Կենդանիներով", pets_no: "Առանց կենդանիների", owner: "Սեփականատեր",
+    agent: "Միջնորդ, միջնորդավճարով", pets_yes: "Կենդանիներով", pets_no: "Առանց կենդանիների", owner: "Սեփականատեր",
     now: "հենց հիմա", ago_m: "{n} րոպե առաջ", ago_h: "{n} ժամ առաջ", ago_d: "{n} օր առաջ",
     filter_title: "Ինչ ես փնտրում",
     f_price: "Ամսական գին, դոլար", f_from: "սկսած", f_to: "մինչև", f_rooms: "Սենյակներ", f_districts: "Թաղամասեր",
@@ -394,7 +395,7 @@ const I18N = {
     rep_title: "Что не так", rep_msg: "После 3 жалоб номер попадает в чёрный список.",
     rep_agent: "Посредник", rep_fake: "Мошенник",
     rep_ok: "Спасибо, жалоба принята", rep_already: "Ты уже жаловался", rep_own: "Это твоё объявление",
-    pets_yes: "Можно с животными", pets_no: "Без животных", owner: "Собственник",
+    agent: "Посредник, с комиссией", pets_yes: "Можно с животными", pets_no: "Без животных", owner: "Собственник",
     now: "только что", ago_m: "{n} мин назад", ago_h: "{n} ч назад", ago_d: "{n} дн назад",
     filter_title: "Что ищешь",
     f_price: "Цена в месяц, доллары", f_from: "от", f_to: "до", f_rooms: "Комнаты", f_districts: "Районы",
@@ -434,7 +435,7 @@ const I18N = {
     rep_title: "What's wrong", rep_msg: "After 3 reports the number is blacklisted.",
     rep_agent: "Agent", rep_fake: "Scam",
     rep_ok: "Thanks, report received", rep_already: "You've already reported this", rep_own: "This is your listing",
-    pets_yes: "Pets allowed", pets_no: "No pets", owner: "Owner",
+    agent: "Agent, charges a commission", pets_yes: "Pets allowed", pets_no: "No pets", owner: "Owner",
     now: "just now", ago_m: "{n} min ago", ago_h: "{n} h ago", ago_d: "{n} d ago",
     filter_title: "What are you looking for",
     f_price: "Monthly price, USD", f_from: "from", f_to: "up to", f_rooms: "Rooms", f_districts: "Districts",
@@ -583,6 +584,7 @@ function cardHTML(it, opts = {}) {
   const meta = [roomsLabel(it.rooms), dname(it.district)].filter(Boolean).join(", ");
   const badges = [];
   if (it.source === "bot") badges.push(`<span class="badge owner">${t("owner")}</span>`);
+  else if (it.agent) badges.push(`<span class="badge agent">${t("agent")}</span>`);
   if (it.pets === 1) badges.push(`<span class="badge">${t("pets_yes")}</span>`);
   if (it.pets === 0) badges.push(`<span class="badge">${t("pets_no")}</span>`);
   const acts = [];

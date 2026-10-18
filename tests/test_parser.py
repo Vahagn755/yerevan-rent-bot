@@ -89,6 +89,18 @@ class ListingTest(unittest.TestCase):
         p = parse_listing("Վարձով է տրվում 3 սենյականոց բնակարան Կենտրոնում, 300000 դրամ", RATE)
         self.assertEqual((p.rooms, p.district, p.price.currency), (3, "kentron", "AMD"))
 
+    def test_real_agent_post(self):
+        text = ("🏠 СДАЁТСЯ В АРЕНДУ НА ДЛИТЕЛЬНЫЙ СРОК\nСдаётся 3- комнатная квартира в районе Nor-Nork\n"
+                "💰 Депозит: обязателен\n🟢 комиссия 30%\n🔴 животные\n🟢дети\n🟢цена 250.000 др.\n"
+                "Тел. 044666716")
+        p = parse_listing(text, RATE)
+        self.assertEqual((p.rooms, p.district, p.price.amount, p.price.currency, p.pets, p.phone, p.agent),
+                         (3, "nor_nork", 250_000, "AMD", 0, "37444666716", True))
+
+    def test_dr_abbreviation_needs_word_end(self):
+        self.assertEqual(parse_price("200 000 դր. Արաբկիր", RATE).currency, "AMD")
+        self.assertIsNone(parse_price("300 другой", RATE))
+
     def test_demand_and_sale_skipped(self):
         self.assertIsNone(parse_listing("Сниму 2-комн. в Арабкире до 500$", RATE))
         self.assertIsNone(parse_listing("Վաճառվում է 2 սենյակ Արաբկիր 90000$", RATE))
