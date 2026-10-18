@@ -113,7 +113,8 @@ async def api_me(request: web.Request) -> web.Response:
         "lang": lang,
         "paused": await db.is_paused(user["id"]),
         "filter": filter_json(flt),
-        "districts": [{"key": k, "name": district_name(k, lang)} for k in DISTRICTS],
+        "districts": [{"key": k, "name": district_name(k, lang),
+                       "names": {code: district_name(k, code) for code in LANGS}} for k in DISTRICTS],
         "amd_per_usd": cfg.amd_per_usd,
         "daily_post_limit": cfg.daily_post_limit,
     })

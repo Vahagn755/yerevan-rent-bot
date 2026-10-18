@@ -445,13 +445,21 @@ function ago(ts) {
   if (s < 86400) return t("ago_h", { n: Math.floor(s / 3600) });
   return t("ago_d", { n: Math.floor(s / 86400) });
 }
+function dname(key) {
+  if (!key || !state.me) return "";
+  const d = state.me.districts.find(x => x.key === key);
+  return d ? ((d.names && d.names[state.lang]) || d.name) : "";
+}
+function districtChips(selected) {
+  return state.me.districts.map(d => chip(dname(d.key), selected.includes(d.key), `data-v="${d.key}"`)).join("");
+}
 function roomsLabel(n) { return n ? t("rooms_n", { n: n >= 5 ? "5+" : n }) : ""; }
 
 function cardHTML(it, mine) {
   const media = it.photo
     ? `<img loading="lazy" src="/api/photo/${it.id}" alt="">`
-    : `<div class="tuff"><span>${esc(it.district_name || roomsLabel(it.rooms) || "Երևան")}</span></div>`;
-  const meta = [roomsLabel(it.rooms), it.district_name].filter(Boolean).join(", ");
+    : `<div class="tuff"><span>${esc(dname(it.district) || roomsLabel(it.rooms) || "Երևան")}</span></div>`;
+  const meta = [roomsLabel(it.rooms), dname(it.district)].filter(Boolean).join(", ");
   const badges = [];
   if (it.source === "bot") badges.push(`<span class="badge owner">${t("owner")}</span>`);
   if (it.pets === 1) badges.push(`<span class="badge">${t("pets_yes")}</span>`);
@@ -565,7 +573,7 @@ function renderFilter() {
   $("#f-min").value = f.price_min || "";
   $("#f-max").value = f.price_max || "";
   $("#f-rooms").innerHTML = [1, 2, 3, 4, 5].map(n => chip(n === 5 ? "5+" : String(n), f.rooms.includes(n), `data-v="${n}"`)).join("");
-  $("#f-districts").innerHTML = state.me.districts.map(d => chip(d.name, f.districts.includes(d.key), `data-v="${d.key}"`)).join("");
+  $("#f-districts").innerHTML = districtChips(f.districts);
   $("#f-pets").checked = f.pets;
   $("#f-notify").checked = !state.me.paused;
   $("#f-lang").innerHTML = [["hy", "Հայերեն"], ["ru", "Русский"], ["en", "English"]].map(([k, n]) => chip(n, k === state.lang, `data-v="${k}"`)).join("");
@@ -583,7 +591,15 @@ $("#f-max").addEventListener("input", amdHint);
 toggleChip($("#f-rooms"), false);
 toggleChip($("#f-districts"), false);
 toggleChip($("#f-lang"), true);
-$("#f-lang").addEventListener("change", () => { state.lang = pressed($("#f-lang"), "v")[0]; applyText(); });
+$("#f-lang").addEventListener("change", () => {
+  state.lang = pressed($("#f-lang"), "v")[0];
+  // redraw everything that shows district names, keeping what is already selected
+  $("#f-districts").innerHTML = districtChips(pressed($("#f-districts"), "v"));
+  $("#p-district").innerHTML = districtChips(state.post.district ? [state.post.district] : []);
+  applyText();
+  state.me.lang = state.lang;
+  api("/api/settings", { method: "POST", json: { lang: state.lang } }).catch(() => {});
+});
 
 $("#f-save").addEventListener("click", async () => {
   const btn = $("#f-save"); btn.disabled = true;
@@ -605,7 +621,7 @@ $("#f-save").addEventListener("click", async () => {
 
 /* ---------- post ---------- */
 function renderPostChips() {
-  $("#p-district").innerHTML = state.me.districts.map(d => chip(d.name, false, `data-v="${d.key}"`)).join("");
+  $("#p-district").innerHTML = districtChips([]);
   $("#p-rooms").innerHTML = [1, 2, 3, 4, 5].map(n => chip(n === 5 ? "5+" : String(n), false, `data-v="${n}"`)).join("");
 }
 toggleChip($("#p-district"), true);
