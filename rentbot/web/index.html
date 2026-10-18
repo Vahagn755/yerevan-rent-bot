@@ -99,54 +99,91 @@ nav.tabs button[aria-selected="true"] svg { color: var(--apricot); }
 nav.tabs .post-tab .plus { width: 40px; height: 30px; border-radius: 10px; background: var(--apricot); color: var(--apricot-ink); display: grid; place-items: center; }
 nav.tabs .post-tab .plus svg { width: 20px; height: 20px; color: var(--apricot-ink) !important; }
 
-/* ---------- listing cards ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-.card { background: var(--surface); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); display: flex; flex-direction: column; }
-.media { position: relative; aspect-ratio: 4 / 3; background: var(--tuff); }
+/* ---------- catalog toolbar ---------- */
+.catbar { display: flex; align-items: center; gap: 10px; margin: 4px 0 12px; flex-wrap: wrap; }
+.catbar .btn { padding: 9px 14px; }
+.catbar .btn svg { width: 18px; height: 18px; }
+.catbar .dot { min-width: 20px; height: 20px; border-radius: 10px; background: var(--apricot); color: var(--apricot-ink); font-size: 12px; display: inline-grid; place-items: center; padding: 0 6px; }
+.modes { display: inline-flex; background: var(--sunk); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
+.modes button { border: 0; background: none; width: 40px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); }
+.modes button svg { width: 18px; height: 18px; }
+.modes button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(42,37,34,.14); }
+.found { margin-left: auto; color: var(--muted); font-size: 14px; }
+.found b { color: var(--ink); }
+.sort { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; font-size: 14px; color: var(--ink); }
+
+/* ---------- listing cards: a row in list mode, a tile in tiles mode ---------- */
+.list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.list.tiles { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.card { position: relative; background: var(--surface); border-radius: 18px; overflow: hidden; border: 1px solid var(--line); display: flex; cursor: pointer; }
+.list:not(.tiles) .card { flex-direction: row; min-height: 156px; }
+.list.tiles .card { flex-direction: column; }
+.media { position: relative; background: var(--tuff); flex: none; overflow: hidden; }
+.list:not(.tiles) .card .media { width: clamp(124px, 36%, 300px); }
+.list.tiles .card .media, .detail .media { aspect-ratio: 4 / 3; }
 .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .slides { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .slides::-webkit-scrollbar { display: none; }
 .slides img { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; }
-.slide-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.85); color: #2A2522; display: grid; place-items: center; font-size: 20px; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.slide-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.88); color: #2A2522; display: grid; place-items: center; font-size: 22px; line-height: 1; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
 .slide-btn.prev { left: 10px; } .slide-btn.next { right: 10px; }
 .slide-btn[disabled] { opacity: 0; pointer-events: none; }
-.media .count { position: absolute; right: 12px; bottom: 12px; background: rgba(0,0,0,.55); color: #fff; font-size: 13px; padding: 3px 9px; border-radius: 999px; }
-.media .tuff-bg { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 14px 16px; }
-.media .tuff-bg span { font: 700 28px/1 var(--serif); color: var(--tuff-ink); letter-spacing: -0.01em; }
-.media .price-tag { position: absolute; left: 12px; top: 12px; background: var(--surface); color: var(--ink); border-radius: 12px; padding: 6px 10px; font: 700 20px/1 var(--serif); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-.fav { position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--surface); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-.fav svg { width: 20px; height: 20px; }
+.media .count { position: absolute; right: 8px; bottom: 8px; background: rgba(30,24,28,.62); color: #fff; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 8px; }
+.media .flag { position: absolute; left: 8px; top: 8px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; color: #fff; background: var(--ok); }
+.media .who { position: absolute; left: 8px; bottom: 8px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; background: rgba(30,24,28,.62); color: #fff; }
+.media .who.owner { background: rgba(48,110,74,.9); }
+.media .who.agent { background: rgba(160,56,40,.9); }
+.media .tuff-bg { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 10px 12px 34px; }
+.media .tuff-bg span { font: 700 20px/1.05 var(--serif); color: var(--tuff-ink); letter-spacing: -0.01em; }
+.detail .media .tuff-bg span { font-size: 30px; }
+.body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.price { font: 700 22px/1.1 var(--serif); letter-spacing: -0.01em; padding-right: 44px; }
+.price small { font: 500 13px/1 var(--sans); color: var(--muted); margin-left: 6px; letter-spacing: 0; }
+.usd { color: var(--muted); font-size: 13px; margin-top: -4px; }
+.addr { font-weight: 600; font-size: 15px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.specs { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink); font-size: 14px; }
+.specs span { display: inline-flex; align-items: center; gap: 5px; }
+.specs svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 13px; padding: 4px 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.when { color: var(--muted); font-size: 12px; margin-top: auto; }
+.fav { position: absolute; right: 10px; top: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--sunk); display: grid; place-items: center; color: var(--ink); z-index: 2; }
+.list.tiles .fav { background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.14); }
+.fav svg { width: 19px; height: 19px; }
 .fav[aria-pressed="true"] svg { color: #D9534F; fill: currentColor; }
-.body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
-.meta { font-weight: 600; font-size: 17px; }
-.sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
-.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.badge { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--sunk); }
-.badge.owner { color: var(--ok); background: transparent; border: 1px solid currentColor; }
-.badge.agent { color: var(--danger); background: transparent; border: 1px solid currentColor; }
-.desc { margin: 10px 0 0; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.desc.open { -webkit-line-clamp: unset; }
-.phone { margin-top: 10px; font-weight: 600; font-size: 15px; }
-.addr { margin-top: 2px; font-size: 15px; }
-.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; }
-.facts div { background: var(--sunk); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.card.gone { opacity: .45; transition: opacity .3s; }
+.skeleton { height: 156px; border-radius: 18px; background: var(--sunk); }
+.more { margin: 18px auto 0; display: flex; max-width: 320px; }
+
+/* ---------- listing detail sheet ---------- */
+.detail { position: fixed; inset: 0; z-index: 25; background: var(--paper); overflow-y: auto; animation: enter .18s ease-out; }
+.detail-inner { max-width: 720px; margin: 0 auto; padding: 12px 16px calc(var(--safe-b) + 96px); }
+.detail .close { border: 0; background: var(--sunk); width: 40px; height: 40px; border-radius: 50%; font-size: 20px; margin-bottom: 10px; }
+.detail .media { border-radius: 20px; }
+.detail .price { font-size: 30px; padding: 0; margin-top: 16px; }
+.detail .addr { font-size: 17px; -webkit-line-clamp: unset; margin-top: 6px; }
+.detail .when { margin-top: 4px; }
+.detail .tags { margin-top: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 14px 0 0; }
+.facts div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; min-width: 0; }
 .facts dt { font-size: 12px; color: var(--muted); }
-.facts dd { margin: 2px 0 0; font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
-.orig { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.facts dd { margin: 3px 0 0; font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+.desc { margin: 16px 0 0; white-space: pre-line; }
+.orig { margin-top: 14px; font-size: 14px; color: var(--muted); }
 .orig summary { cursor: pointer; font-weight: 600; color: var(--ink); }
 .orig p { white-space: pre-line; margin: 8px 0 0; }
-.actions { display: flex; gap: 8px; margin-top: auto; padding-top: 14px; }
+.phone { margin-top: 14px; font-weight: 700; font-size: 17px; }
+.detail-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; padding: 10px 16px var(--safe-b); background: var(--surface); border-top: 1px solid var(--line); }
+.detail-bar .row { max-width: 720px; margin: 0 auto; }
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px; font-weight: 600; font-size: 15px; text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn.primary { background: var(--apricot); border-color: var(--apricot); color: var(--apricot-ink); flex: 1; }
 .btn.ghost { background: none; border-color: transparent; color: var(--muted); }
 .btn.danger { color: var(--danger); }
 .btn.wide { width: 100%; padding: 14px; font-size: 16px; border-radius: 14px; }
+.btn.icon { width: 48px; padding: 10px 0; flex: none; }
+.btn.icon svg { width: 20px; height: 20px; }
+.btn.icon[aria-pressed="true"] svg { color: #D9534F; fill: currentColor; }
 .btn:disabled { opacity: .55; }
-.card.gone { opacity: .45; transition: opacity .3s; }
-.skeleton { height: 360px; border-radius: 20px; background: var(--sunk); }
-.focus-title { font: 700 19px/1.2 var(--serif); margin: 4px 0 10px; }
-#focus { margin-bottom: 22px; }
-.more { margin: 18px auto 0; display: flex; max-width: 320px; }
 
 /* ---------- empty states ---------- */
 .empty { grid-column: 1 / -1; text-align: center; padding: 28px 16px 12px; }
@@ -213,7 +250,6 @@ textarea.input { min-height: 120px; resize: vertical; }
         <circle cx="62" cy="88" r="3.5" fill="#2E2430"/>
       </svg>
     </header>
-    <div id="focus" class="hidden"></div>
     <div class="toolbar">
       <div class="seg" role="group">
         <button type="button" data-scope="feed" aria-pressed="true" data-t="seg_mine"></button>
@@ -221,7 +257,22 @@ textarea.input { min-height: 120px; resize: vertical; }
       </div>
       <div class="scroller" id="quick-districts"></div>
     </div>
-    <div class="grid" id="feed-list"></div>
+    <div class="catbar">
+      <button type="button" class="btn" data-go="filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 5h18l-7 8.5V20l-4-2v-4.5z"/></svg>
+        <span data-t="filters"></span><span class="dot hidden" id="flt-count"></span></button>
+      <div class="modes" role="group">
+        <button type="button" data-mode="tiles" aria-pressed="false" aria-label="▦"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
+        <button type="button" data-mode="list" aria-pressed="true" aria-label="☰"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></button>
+      </div>
+      <span class="found" id="found"></span>
+      <select class="sort" id="sort">
+        <option value="new" data-t="sort_new"></option>
+        <option value="cheap" data-t="sort_cheap"></option>
+        <option value="expensive" data-t="sort_expensive"></option>
+      </select>
+    </div>
+    <div class="list" id="feed-list"></div>
     <button type="button" id="feed-more" class="btn more hidden" data-t="more"></button>
   </section>
 
@@ -359,7 +410,7 @@ textarea.input { min-height: 120px; resize: vertical; }
         <button type="button" data-my="saved" aria-pressed="false" data-t="my_tab_saved"></button>
       </div>
     </div>
-    <div class="grid" id="my-list"></div>
+    <div class="list" id="my-list"></div>
   </section>
 </main>
 
@@ -378,13 +429,18 @@ textarea.input { min-height: 120px; resize: vertical; }
     <span data-t="tab_my"></span></button>
 </div></nav>
 
+<div id="detail" class="detail hidden" role="dialog" aria-modal="true">
+  <div class="detail-inner" id="detail-body"></div>
+  <div class="detail-bar"><div class="row" id="detail-bar"></div></div>
+</div>
+
 <div id="toast" class="toast hidden" role="status"></div>
 
 <script>
 "use strict";
 const I18N = {
   hy: {
-    opened: "Հայտարարությունը, որ բացեցիր", floor: "Հարկ", area: "Մակերես", m2: "մ²", deposit: "Ավանդ", deposit_yes: "Պահանջվում է", deposit_no: "Չկա", pets: "Կենդանիներ", kids: "Երեխաներ", allowed: "Կարելի է", not_allowed: "Ոչ", agent_pct: "Միջնորդ, {p}% միջնորդավճար", full_text: "Ամբողջական տեքստը", p_floor: "Հարկ", p_floors: "Շենքի հարկերը", p_area: "Մակերես, մ²", p_address: "Հասցե (փողոց)", p_address_ph: "օր. Կոմիտաս 12", p_kids: "Երեխաներ", p_deposit: "Ավանդ", 
+    filters: "Ֆիլտրեր", found: "Գտնվել է՝", sort_new: "Նորերը սկզբում", sort_cheap: "Էժանները սկզբում", sort_expensive: "Թանկերը սկզբում", per_month: "ամսական", new: "Նոր", agent_short: "Միջնորդ", who: "Ով է տեղադրել", floor_short: "հարկ", no_deposit: "Առանց ավանդի", kids_ok: "Երեխաներով", opened: "Հայտարարությունը, որ բացեցիր", floor: "Հարկ", area: "Մակերես", m2: "մ²", deposit: "Ավանդ", deposit_yes: "Պահանջվում է", deposit_no: "Չկա", pets: "Կենդանիներ", kids: "Երեխաներ", allowed: "Կարելի է", not_allowed: "Ոչ", agent_pct: "Միջնորդ, {p}% միջնորդավճար", full_text: "Ամբողջական տեքստը", p_floor: "Հարկ", p_floors: "Շենքի հարկերը", p_area: "Մակերես, մ²", p_address: "Հասցե (փողոց)", p_address_ph: "օր. Կոմիտաս 12", p_kids: "Երեխաներ", p_deposit: "Ավանդ", 
     title: "Վարձով տուն Երևանում", hello: "Բարև, {name}",
     stat_active: "ակտիվ հայտարարություն", stat_today: "նոր՝ վերջին 24 ժամում",
     tab_feed: "Գլխավոր", tab_filter: "Ֆիլտր", tab_post: "Տեղադրել", tab_my: "Իմը",
@@ -425,7 +481,7 @@ const I18N = {
     open_bot: "Այս էջը բացիր Telegram-ում՝ բոտի «Բացել» կոճակով։"
   },
   ru: {
-    opened: "Объявление, которое ты открыл", floor: "Этаж", area: "Площадь", m2: "м²", deposit: "Депозит", deposit_yes: "Нужен", deposit_no: "Нет", pets: "Животные", kids: "Дети", allowed: "Можно", not_allowed: "Нельзя", agent_pct: "Посредник, комиссия {p}%", full_text: "Полный текст", p_floor: "Этаж", p_floors: "Этажей в доме", p_area: "Площадь, м²", p_address: "Адрес (улица)", p_address_ph: "напр. Комитаса 12", p_kids: "Дети", p_deposit: "Депозит", 
+    filters: "Фильтры", found: "Найдено:", sort_new: "Сначала новые", sort_cheap: "Сначала дешёвые", sort_expensive: "Сначала дорогие", per_month: "в месяц", new: "Новое", agent_short: "Посредник", who: "Кто разместил", floor_short: "эт.", no_deposit: "Без депозита", kids_ok: "Можно с детьми", opened: "Объявление, которое ты открыл", floor: "Этаж", area: "Площадь", m2: "м²", deposit: "Депозит", deposit_yes: "Нужен", deposit_no: "Нет", pets: "Животные", kids: "Дети", allowed: "Можно", not_allowed: "Нельзя", agent_pct: "Посредник, комиссия {p}%", full_text: "Полный текст", p_floor: "Этаж", p_floors: "Этажей в доме", p_area: "Площадь, м²", p_address: "Адрес (улица)", p_address_ph: "напр. Комитаса 12", p_kids: "Дети", p_deposit: "Депозит", 
     title: "Аренда квартир в Ереване", hello: "Привет, {name}",
     stat_active: "активных объявлений", stat_today: "новых за 24 часа",
     tab_feed: "Главная", tab_filter: "Фильтр", tab_post: "Разместить", tab_my: "Моё",
@@ -466,7 +522,7 @@ const I18N = {
     open_bot: "Открой эту страницу в Telegram кнопкой «Открыть» в боте."
   },
   en: {
-    opened: "The listing you opened", floor: "Floor", area: "Area", m2: "m²", deposit: "Deposit", deposit_yes: "Required", deposit_no: "None", pets: "Pets", kids: "Kids", allowed: "Allowed", not_allowed: "No", agent_pct: "Agent, {p}% commission", full_text: "Full text", p_floor: "Floor", p_floors: "Floors in building", p_area: "Area, m²", p_address: "Address (street)", p_address_ph: "e.g. Komitas 12", p_kids: "Kids", p_deposit: "Deposit", 
+    filters: "Filters", found: "Found:", sort_new: "Newest first", sort_cheap: "Cheapest first", sort_expensive: "Most expensive first", per_month: "/ month", new: "New", agent_short: "Agent", who: "Posted by", floor_short: "fl.", no_deposit: "No deposit", kids_ok: "Kids welcome", opened: "The listing you opened", floor: "Floor", area: "Area", m2: "m²", deposit: "Deposit", deposit_yes: "Required", deposit_no: "None", pets: "Pets", kids: "Kids", allowed: "Allowed", not_allowed: "No", agent_pct: "Agent, {p}% commission", full_text: "Full text", p_floor: "Floor", p_floors: "Floors in building", p_area: "Area, m²", p_address: "Address (street)", p_address_ph: "e.g. Komitas 12", p_kids: "Kids", p_deposit: "Deposit", 
     title: "Rentals in Yerevan", hello: "Hi, {name}",
     stat_active: "active listings", stat_today: "new in 24 hours",
     tab_feed: "Home", tab_filter: "Filter", tab_post: "Post", tab_my: "Mine",
@@ -512,7 +568,7 @@ const tg = window.Telegram && window.Telegram.WebApp;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
 const state = {
-  lang: "hy", me: null, scope: "feed", district: null, next: null, my: "mine", favs: new Set(), cache: {},
+  lang: "hy", me: null, scope: "feed", sort: "new", mode: "list", district: null, next: null, my: "mine", favs: new Set(), cache: {},
   step: 1, post: { district: null, rooms: null, cur: "USD", pets: 0, photo: null, photoUrl: null },
 };
 
@@ -619,95 +675,165 @@ function districtChips(selected) {
 }
 function roomsLabel(n) { return n ? t("rooms_n", { n: n >= 5 ? "5+" : n }) : ""; }
 const HEART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>';
+const IC = {
+  bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/></svg>',
+  area: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 20 20 4M4 20v-5M4 20h5M20 4h-5M20 4v5"/></svg>',
+  floor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>',
+};
 
+function priceParts(price) {  // "250 000 ֏ (≈ $641)" -> ["250 000 ֏", "≈ $641"]
+  const m = /^(.*?)\s*\((≈[^)]*)\)\s*$/.exec(price || "");
+  return m ? [m[1], m[2]] : [price || "—", ""];
+}
+function mediaHTML(it, opts) {
+  const photos = opts.photoUrl ? [opts.photoUrl] : (it.photos || []);
+  let html = photos.length
+    ? `<div class="slides">${photos.map(u => `<img loading="lazy" src="${u}" alt="">`).join("")}</div>`
+    : `<div class="tuff-bg"><span>${esc(dname(it.district) || "Երևան")}</span></div>`;
+  if (photos.length > 1) {
+    html += `<span class="count">1/${photos.length}</span>`;
+    if (opts.arrows) html += `<button type="button" class="slide-btn prev" data-act="prev" aria-label="‹" disabled>‹</button>
+      <button type="button" class="slide-btn next" data-act="next" aria-label="›">›</button>`;
+  }
+  if (Date.now() / 1000 - it.created < 86400) html += `<span class="flag">${t("new")}</span>`;
+  if (it.source === "bot") html += `<span class="who owner">${t("owner")}</span>`;
+  else if (it.agent) html += `<span class="who agent">${t("agent_short")}</span>`;
+  return `<div class="media">${html}</div>`;
+}
+function addrLine(it) {
+  const d = it.details || {};
+  return [d.address, dname(it.district)].filter(Boolean).join(", ") || roomsLabel(it.rooms) || "Երևան";
+}
+function specsHTML(it) {
+  const d = it.details || {}, out = [];
+  if (it.rooms) out.push(`<span>${IC.bed}${esc(roomsLabel(it.rooms))}</span>`);
+  if (d.area) out.push(`<span>${IC.area}${d.area} ${t("m2")}</span>`);
+  if (d.floor) out.push(`<span>${IC.floor}${d.floors ? `${d.floor}/${d.floors}` : `${d.floor} ${t("floor_short")}`}</span>`);
+  return out.length ? `<div class="specs">${out.join("")}</div>` : "";
+}
+function tagsHTML(it) {
+  const d = it.details || {}, out = [];
+  if (it.pets === 1) out.push(t("pets_yes")); else if (it.pets === 0) out.push(t("pets_no"));
+  if (d.deposit === false) out.push(t("no_deposit"));
+  if (d.kids === true) out.push(t("kids_ok"));
+  if (it.agent && d.commission) out.push(t("agent_pct", { p: d.commission }));
+  return out.length ? `<div class="tags">${out.map(x => `<span class="tag">${esc(x)}</span>`).join("")}</div>` : "";
+}
+
+/* compact catalog card */
 function cardHTML(it, opts = {}) {
   state.cache[it.id] = it;
-  const photos = opts.photoUrl ? [opts.photoUrl] : (it.photos || []);
-  const media = photos.length
-    ? `<div class="slides">${photos.map((u, i) => `<img loading="lazy" src="${u}" alt="" data-i="${i}">`).join("")}</div>` +
-      (photos.length > 1 ? `<span class="count">1 / ${photos.length}</span>
-        <button type="button" class="slide-btn prev" data-act="prev" aria-label="‹" disabled>‹</button>
-        <button type="button" class="slide-btn next" data-act="next" aria-label="›">›</button>` : "")
-    : `<div class="tuff-bg"><span>${esc(dname(it.district) || "Երևան")}</span></div>`;
-  const meta = [roomsLabel(it.rooms), dname(it.district)].filter(Boolean).join(", ");
-  const d = it.details || {};
-  const facts = [];
-  if (d.floor) facts.push(["🏢", t("floor"), d.floors ? `${d.floor} / ${d.floors}` : d.floor]);
-  if (d.area) facts.push(["📐", t("area"), `${d.area} ${t("m2")}`]);
-  if (d.deposit !== undefined) facts.push([d.deposit ? "🔐" : "🔓", t("deposit"), t(d.deposit ? "deposit_yes" : "deposit_no")]);
-  if (it.pets === 1 || it.pets === 0) facts.push(["🐾", t("pets"), t(it.pets ? "allowed" : "not_allowed")]);
-  if (d.kids !== undefined) facts.push(["👶", t("kids"), t(d.kids ? "allowed" : "not_allowed")]);
-  const factsHTML = facts.length ? `<dl class="facts">${facts.map(([i, k, v]) =>
-    `<div><dt>${i} ${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : "";
-  const badges = [];
-  if (it.source === "bot") badges.push(`<span class="badge owner">${t("owner")}</span>`);
-  else if (it.agent) badges.push(`<span class="badge agent">${d.commission ? t("agent_pct", { p: d.commission }) : t("agent")}</span>`);
-  const acts = [];
-  if (opts.mine) {
-    acts.push(`<button type="button" class="btn danger" data-act="rented" style="flex:1">${t("rented")}</button>`);
-  } else if (!opts.preview) {
-    if (it.phone_raw) acts.push(`<a class="btn primary" href="tel:+${esc(it.phone_raw)}">${t("call")}</a>`);
-    if (it.link) acts.push(`<button type="button" class="btn${it.phone_raw ? "" : " primary"}" data-act="source">${t("source")}</button>`);
-    if (!it.mine) acts.push(`<button type="button" class="btn ghost" data-act="report">${t("report")}</button>`);
-  }
+  const [main, usd] = priceParts(it.price);
   const fav = opts.mine || opts.preview || it.mine ? "" :
     `<button type="button" class="fav" data-act="fav" aria-pressed="${state.favs.has(it.id)}" aria-label="♡">${HEART}</button>`;
-  return `<article class="card" data-id="${it.id}" data-link="${esc(it.link || "")}">
-    <div class="media">${media}<span class="price-tag">${esc(it.price)}</span>${fav}</div>
+  return `<article class="card" data-id="${it.id}" data-mine="${opts.mine ? 1 : ""}" ${opts.preview ? 'data-preview="1"' : ""}>
+    ${mediaHTML(it, opts)}
     <div class="body">
-      <div class="meta">${esc(meta) || "&nbsp;"}</div>
-      ${d.address ? `<div class="addr">📍 ${esc(d.address)}</div>` : ""}
-      <div class="sub">${ago(it.created)}</div>
-      ${badges.length ? `<div class="badges">${badges.join("")}</div>` : ""}
-      ${factsHTML}
+      ${fav}
+      <div class="price">${esc(main)}<small>${t("per_month")}</small></div>
+      ${usd ? `<div class="usd">${esc(usd)}</div>` : ""}
+      <div class="addr">${esc(addrLine(it))}</div>
+      ${specsHTML(it)}
+      ${tagsHTML(it)}
+      <div class="when">${ago(it.created)}</div>
+    </div></article>`;
+}
+
+/* full listing sheet */
+function openDetail(id, mine) {
+  const it = state.cache[id]; if (!it) return;
+  const d = it.details || {};
+  const [main, usd] = priceParts(it.price);
+  const facts = [];
+  if (it.rooms) facts.push([t("p_rooms"), roomsLabel(it.rooms)]);
+  if (d.area) facts.push([t("area"), `${d.area} ${t("m2")}`]);
+  if (d.floor) facts.push([t("floor"), d.floors ? `${d.floor} / ${d.floors}` : d.floor]);
+  if (d.deposit !== undefined) facts.push([t("deposit"), t(d.deposit ? "deposit_yes" : "deposit_no")]);
+  if (it.pets === 1 || it.pets === 0) facts.push([t("pets"), t(it.pets ? "allowed" : "not_allowed")]);
+  if (d.kids !== undefined) facts.push([t("kids"), t(d.kids ? "allowed" : "not_allowed")]);
+  if (it.source === "bot") facts.push([t("who"), t("owner")]);
+  else if (it.agent) facts.push([t("who"), d.commission ? t("agent_pct", { p: d.commission }) : t("agent")]);
+  $("#detail-body").innerHTML = `
+    <button type="button" class="close" data-act="close" aria-label="✕">✕</button>
+    <article class="card-detail" data-id="${it.id}">
+      ${mediaHTML(it, { arrows: true })}
+      <div class="price">${esc(main)}<small>${t("per_month")}</small></div>
+      ${usd ? `<div class="usd" style="margin-top:2px">${esc(usd)}</div>` : ""}
+      <div class="addr">📍 ${esc(addrLine(it))}</div>
+      <div class="when">${ago(it.created)}</div>
+      ${facts.length ? `<dl class="facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
       ${it.description && it.source === "bot" ? `<p class="desc">${esc(it.description)}</p>` : ""}
       ${it.description && it.source !== "bot" ? `<details class="orig"><summary>${t("full_text")}</summary><p>${esc(it.description)}</p></details>` : ""}
       ${it.phone ? `<div class="phone">📞 ${esc(it.phone)}</div>` : ""}
-      ${acts.length ? `<div class="actions">${acts.join("")}</div>` : ""}
-    </div></article>`;
+    </article>`;
+  const bar = [];
+  if (mine) bar.push(`<button type="button" class="btn danger wide" data-act="rented">${t("rented")}</button>`);
+  else {
+    if (it.phone_raw) bar.push(`<a class="btn primary" href="tel:+${esc(it.phone_raw)}">${t("call")}</a>`);
+    if (it.link) bar.push(`<button type="button" class="btn${it.phone_raw ? "" : " primary"}" data-act="source">${t("source")}</button>`);
+    if (!it.mine) bar.push(`<button type="button" class="btn icon" data-act="fav" aria-pressed="${state.favs.has(it.id)}" aria-label="♡">${HEART}</button>
+      <button type="button" class="btn ghost" data-act="report">${t("report")}</button>`);
+  }
+  $("#detail-bar").innerHTML = bar.join("");
+  $("#detail").dataset.id = it.id;
+  $("#detail").dataset.mine = mine ? "1" : "";
+  $("#detail").classList.remove("hidden");
+  $("#detail").scrollTop = 0;
+  document.body.style.overflow = "hidden";
+  if (can("6.1")) { tg.BackButton.show(); }
 }
+function closeDetail() {
+  $("#detail").classList.add("hidden");
+  document.body.style.overflow = "";
+  if (can("6.1")) tg.BackButton.hide();
+}
+if (tg && tg.BackButton) tg.BackButton.onClick(closeDetail);
 
 function emptyHTML(h, p, buttons) {
   return `<div class="empty"><div class="arch tuff-bg"></div><h2>${h}</h2><p>${p}</p><div class="row">${buttons}</div></div>`;
 }
 
-function onCardClick(e) {
-  const card = e.target.closest(".card"); if (!card) return;
+function toggleFav(id, btns) {
+  const on = !state.favs.has(id);
+  on ? state.favs.add(id) : state.favs.delete(id);
+  $$(`[data-id="${id}"] [data-act="fav"], #detail-bar [data-act="fav"]`).forEach(b => b.setAttribute("aria-pressed", String(on)));
+  saveFavs(); haptic(on ? "success" : "select"); toast(t(on ? "fav_on" : "fav_off"));
+  if (!on && state.my === "saved") { const c = $(`#my-list .card[data-id="${id}"]`); if (c) { c.remove(); if (!$("#my-list .card")) loadMy(); } }
+}
+function onListClick(e) {
+  const card = e.target.closest(".card"); if (!card || card.dataset.preview) return;
   const id = Number(card.dataset.id);
   const act = e.target.closest("[data-act]");
-  if (!act) { const d = $(".desc", card); if (d) d.classList.toggle("open"); return; }
-  const kind = act.dataset.act;
+  if (act && act.dataset.act === "fav") { toggleFav(id); return; }
+  haptic("select");
+  openDetail(id, !!card.dataset.mine);
+}
+$("#feed-list").addEventListener("click", onListClick);
+$("#my-list").addEventListener("click", onListClick);
+$("#detail").addEventListener("click", e => {
+  const act = e.target.closest("[data-act]"); if (!act) return;
+  const id = Number($("#detail").dataset.id), kind = act.dataset.act;
+  if (kind === "close") closeDetail();
   if (kind === "prev" || kind === "next") {
-    const s = $(".slides", card);
-    s.scrollBy({ left: (kind === "next" ? 1 : -1) * s.clientWidth, behavior: "smooth" });
-    return;
+    const s = $("#detail .slides"); s.scrollBy({ left: (kind === "next" ? 1 : -1) * s.clientWidth, behavior: "smooth" });
   }
+  if (kind === "fav") toggleFav(id);
+  if (kind === "report") report(id);
+  if (kind === "rented") markRented(id);
   if (kind === "source") {
-    const link = card.dataset.link;
+    const link = (state.cache[id] || {}).link || "";
     if (link.startsWith("https://t.me/") && can("6.1")) tg.openTelegramLink(link); else if (tg) tg.openLink(link); else window.open(link);
   }
-  if (kind === "report") report(id);
-  if (kind === "rented") markRented(id, card);
-  if (kind === "fav") {
-    const on = !state.favs.has(id);
-    on ? state.favs.add(id) : state.favs.delete(id);
-    act.setAttribute("aria-pressed", String(on));
-    saveFavs(); haptic(on ? "success" : "select"); toast(t(on ? "fav_on" : "fav_off"));
-    if (!on && state.my === "saved" && card.closest("#my-list")) { card.remove(); if (!$("#my-list .card")) loadMy(); }
-  }
-}
-$("#feed-list").addEventListener("click", onCardClick);
-$("#focus").addEventListener("click", onCardClick);
-document.addEventListener("scroll", e => {
+});
+document.addEventListener("scroll", e => {  // keep the "n/total" badge and arrows in step with swiping
   const s = e.target; if (!(s instanceof Element) || !s.classList.contains("slides")) return;
-  const c = s.parentElement.querySelector(".count"); if (!c) return;
+  const media = s.parentElement, c = media.querySelector(".count"); if (!c) return;
   const i = Math.round(s.scrollLeft / s.clientWidth) + 1, total = s.children.length;
-  c.textContent = `${i} / ${total}`;
-  const media = s.parentElement;
-  media.querySelector(".prev").disabled = i <= 1;
-  media.querySelector(".next").disabled = i >= total;
+  c.textContent = `${i}/${total}`;
+  const prev = media.querySelector(".prev"), next = media.querySelector(".next");
+  if (prev) prev.disabled = i <= 1;
+  if (next) next.disabled = i >= total;
 }, true);
-$("#my-list").addEventListener("click", onCardClick);
 
 function report(id) {
   const send = async (kind) => {
@@ -726,13 +852,14 @@ function report(id) {
   } else if (confirm(t("rep_agent") + "?")) send("agent");
 }
 
-function markRented(id, card) {
+function markRented(id) {
   const go = async (ok) => {
     if (!ok) return;
     try {
       await api(`/api/listings/${id}/rented`, { method: "POST", json: {} });
-      card.classList.add("gone"); haptic("success"); toast(t("removed"));
-      setTimeout(() => { card.remove(); if (!$("#my-list .card")) loadMy(); }, 500);
+      haptic("success"); toast(t("removed")); closeDetail();
+      const card = $(`#my-list .card[data-id="${id}"]`);
+      if (card) { card.classList.add("gone"); setTimeout(() => { card.remove(); if (!$("#my-list .card")) loadMy(); }, 400); }
     } catch (e) { toast(t(e.message)); }
   };
   if (can("6.2")) tg.showConfirm(t("rented_q"), go); else go(confirm(t("rented_q")));
@@ -759,12 +886,14 @@ function setScope(scope) {
 async function loadFeed(reset) {
   const list = $("#feed-list");
   if (reset) { state.next = null; list.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>'; }
+  updateFilterDot();
   try {
-    const q = new URLSearchParams({ scope: state.scope });
-    if (state.next) q.set("before", state.next);
+    const q = new URLSearchParams({ scope: state.scope, sort: state.sort });
+    if (state.next) q.set("offset", state.next);
     if (state.district) q.set("district", state.district);
     const data = await api("/api/listings?" + q);
     if (reset) list.innerHTML = "";
+    $("#found").innerHTML = `${t("found")} <b>${data.total || 0}</b>`;
     list.insertAdjacentHTML("beforeend", data.items.map(it => cardHTML(it)).join(""));
     state.next = data.next;
     $("#feed-more").classList.toggle("hidden", !data.next);
@@ -783,6 +912,19 @@ document.addEventListener("click", e => {
   if (g.dataset.go === "all") setScope("all"); else show(g.dataset.go);
 });
 $("#feed-more").addEventListener("click", () => loadFeed(false));
+$("#sort").addEventListener("change", e => { state.sort = e.target.value; haptic("select"); loadFeed(true); });
+function setMode(mode) {
+  state.mode = mode;
+  $$(".modes [data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  ["#feed-list", "#my-list"].forEach(s => $(s).classList.toggle("tiles", mode === "tiles"));
+  try { localStorage.setItem("mode", mode); } catch (e) {}
+}
+$$(".modes [data-mode]").forEach(b => b.addEventListener("click", () => { haptic("select"); setMode(b.dataset.mode); }));
+function updateFilterDot() {
+  const f = state.me && state.me.filter; if (!f) return;
+  const n = (f.price_min || f.price_max ? 1 : 0) + (f.rooms.length ? 1 : 0) + (f.districts.length ? 1 : 0) + (f.pets ? 1 : 0);
+  const dot = $("#flt-count"); dot.textContent = n; dot.classList.toggle("hidden", !n || state.scope !== "feed");
+}
 
 /* ---------- filter ---------- */
 function toggleChip(container, single) {
@@ -934,7 +1076,7 @@ function renderPreview() {
   const item = { id: 0, source: "bot", district: p.district, rooms: p.rooms, price, pets: p.pets,
     description: $("#p-desc").value.trim(), phone: $("#p-phone").value.trim() || null, phone_raw: digits || null,
     link: null, photo: false, created: Date.now() / 1000, details: postDetails() };
-  $("#p-card").innerHTML = `<div class="grid" style="grid-template-columns:1fr">${cardHTML(item, { preview: true, photoUrl: p.photoUrl })}</div>`;
+  $("#p-card").innerHTML = `<div class="list">${cardHTML(item, { preview: true, photoUrl: p.photoUrl })}</div>`;
 }
 function goStep(n) {
   state.step = n;
@@ -1023,14 +1165,12 @@ async function boot() {
   renderPostChips();
   $("#tabs").classList.remove("hidden");
   show("feed");
+  try { setMode(localStorage.getItem("mode") || "list"); } catch (e) { setMode("list"); }
   const focus = Number(new URLSearchParams(location.search).get("l"));
   if (focus) {
     try {
       const data = await api("/api/listings?ids=" + focus);
-      if (data.items.length) {
-        $("#focus").innerHTML = `<h2 class="focus-title">${t("opened")}</h2><div class="grid">${cardHTML(data.items[0])}</div>`;
-        $("#focus").classList.remove("hidden");
-      }
+      if (data.items.length) { state.cache[focus] = data.items[0]; openDetail(focus, data.items[0].mine); }
     } catch (e) {}
   }
 }

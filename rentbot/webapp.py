@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 
 WEB_DIR = Path(__file__).parent / "web"
 PAGE_SIZE = 30
+MAX_SCAN = 3000  # newest active listings considered for filtering and sorting
 PHOTO_MAX = 10 * 1024 * 1024
 PHOTO_CACHE_SIZE = 200
 
@@ -177,30 +178,23 @@ async def api_listings(request: web.Request) -> web.Response:
     scope = request.query.get("scope", "feed")
     district = request.query.get("district")
     district = district if district in DISTRICTS else None
+    sort = request.query.get("sort", "new")
     try:
-        before = int(request.query.get("before", "0")) or None
+        offset = max(0, int(request.query.get("offset", "0")))
     except ValueError:
-        before = None
+        offset = 0
     flt = await db.get_filter(user["id"]) if scope == "feed" else None
-    items: list[dict] = []
-    cursor = before
-    # walk back through active listings until a page of matches is collected
-    for _ in range(10):
-        rows = await db.active_listings(limit=200, before_id=cursor)
-        if not rows:
-            break
-        for row in rows:
-            if district and row["district"] != district:
-                continue
-            if flt is None or matches(flt, row):
-                items.append(serialize(row, lang, user["id"]))
-                if len(items) >= PAGE_SIZE:
-                    break
-        cursor = rows[-1]["id"]
-        if len(items) >= PAGE_SIZE:
-            break
-    next_before = items[-1]["id"] if len(items) >= PAGE_SIZE else None
-    return web.json_response({"items": items, "next": next_before})
+
+    rows = [r for r in await db.active_listings(limit=MAX_SCAN)
+            if (not district or r["district"] == district) and (flt is None or matches(flt, r))]
+    if sort in ("cheap", "expensive"):
+        priced = [r for r in rows if r["price_usd"] is not None]
+        priced.sort(key=lambda r: r["price_usd"], reverse=sort == "expensive")
+        rows = priced + [r for r in rows if r["price_usd"] is None]
+    page = rows[offset:offset + PAGE_SIZE]
+    nxt = offset + PAGE_SIZE if offset + PAGE_SIZE < len(rows) else None
+    return web.json_response({"items": [serialize(r, lang, user["id"]) for r in page],
+                              "total": len(rows), "next": nxt})
 
 
 async def api_my(request: web.Request) -> web.Response:
