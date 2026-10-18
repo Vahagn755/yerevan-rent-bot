@@ -81,7 +81,7 @@ class ImportResult:
     missing: tuple[str, ...] = ()
 
 
-async def import_post(bot: Bot, db: Database, cfg: Config, text: str, photo_id: str | None,
+async def import_post(bot: Bot, db: Database, cfg: Config, text: str, photo_ids: list[str],
                       link: str | None, on_sent=None) -> ImportResult:
     """Turns a channel post (or a post an admin forwarded) into a listing and sends it out."""
     parsed = parse_listing(text, cfg.amd_per_usd)
@@ -103,7 +103,8 @@ async def import_post(bot: Bot, db: Database, cfg: Config, text: str, photo_id: 
         price_amount=parsed.price.amount, currency=parsed.price.currency,
         price_usd=parsed.price.usd, pets=parsed.pets, agent=int(parsed.agent),
         description=text[:IMPORT_DESC_MAX],
-        phone=parsed.phone, photo_id=photo_id, link=link, text_hash=h,
+        phone=parsed.phone, photo_id=photo_ids[0] if photo_ids else None,
+        photos=",".join(photo_ids[:10]), link=link, text_hash=h,
     )
     listing = await db.get_listing(listing_id)
 

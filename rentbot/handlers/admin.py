@@ -8,6 +8,7 @@ from ..config import Config
 from ..db import Database
 from ..parser import format_phone, normalize_phone
 from ..render import format_card
+from ..services import albums
 from ..texts import t
 
 router = Router(name="admin")
@@ -28,22 +29,37 @@ def _source_link(message: Message) -> str | None:
     return None
 
 
-@router.message(F.forward_origin, F.text | F.caption)
+@router.message(F.forward_origin, F.text | F.caption | F.photo)
 async def on_forward(message: Message, state: FSMContext, db: Database, cfg: Config, bot: Bot,
                      lang: str) -> None:
-    """An admin forwards a post from any channel or chat: it becomes a listing."""
+    """An admin forwards a post (or a whole photo album) from any channel: it becomes a listing."""
     await state.clear()
-    text = message.text or message.caption or ""
-    photo_id = message.photo[-1].file_id if message.photo else None
+    photo = message.photo[-1].file_id if message.photo else None
+
+    async def done(text: str, photos: list[str], first: Message) -> None:
+        await _import_forward(first, text, photos, db, cfg, bot, lang)
+
+    if message.media_group_id:
+        albums.add(message.media_group_id, message.caption, photo, message, done)
+    else:
+        await done(message.text or message.caption or "", [photo] if photo else [], message)
+
+
+async def _import_forward(message: Message, text: str, photos: list[str], db: Database, cfg: Config,
+                          bot: Bot, lang: str) -> None:
+    if not text:
+        await message.reply(t("fwd_not", lang, missing=t("miss_text", lang)))
+        return
 
     async def on_sent(n: int) -> None:
         await bot.send_message(message.chat.id, t("sent_to", lang, n=n))
 
-    res = await import_post(bot, db, cfg, text, photo_id, _source_link(message), on_sent)
+    res = await import_post(bot, db, cfg, text, photos, _source_link(message), on_sent)
     if res.status == "ok":
         listing = await db.get_listing(res.listing_id)
-        await message.reply(f"{t('fwd_ok', lang, id=res.listing_id)}\n\n{format_card(listing, lang)}"
-                            f"\n\n{t('fwd_undo', lang, id=res.listing_id)}")
+        n_photos = len([p for p in (listing["photos"] or "").split(",") if p])
+        await message.reply(f"{t('fwd_ok', lang, id=res.listing_id)} 📷 {n_photos}\n\n"
+                            f"{format_card(listing, lang)}\n\n{t('fwd_undo', lang, id=res.listing_id)}")
     elif res.status == "not_listing":
         missing = ", ".join(t("miss_" + m, lang) for m in res.missing) or t("miss_offer", lang)
         await message.reply(t("fwd_not", lang, missing=missing))

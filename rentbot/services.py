@@ -28,6 +28,34 @@ def spawn(coro: Coroutine) -> asyncio.Task:
     return task
 
 
+class AlbumCollector:
+    """Telegram delivers an album as separate messages sharing a media_group_id.
+    Collect them for a moment, then hand over the caption and every photo at once."""
+
+    def __init__(self, wait: float = 1.5):
+        self.wait = wait
+        self._groups: dict[str, dict] = {}
+
+    def add(self, group_id: str, text: str | None, photo_id: str | None, first_message, on_done) -> None:
+        g = self._groups.setdefault(group_id, {"text": "", "photos": [], "message": first_message,
+                                               "on_done": on_done, "timer": None})
+        if text and not g["text"]:
+            g["text"], g["message"] = text, first_message
+        if photo_id:
+            g["photos"].append(photo_id)
+        if g["timer"]:
+            g["timer"].cancel()
+        g["timer"] = asyncio.get_running_loop().call_later(self.wait, self._finish, group_id)
+
+    def _finish(self, group_id: str) -> None:
+        g = self._groups.pop(group_id, None)
+        if g:
+            spawn(g["on_done"](g["text"], g["photos"], g["message"]))
+
+
+albums = AlbumCollector()
+
+
 async def send_card(bot: Bot, chat_id: int, listing: Mapping, lang: str) -> None:
     text = format_card(listing, lang)
     kb = card_kb(lang, listing)

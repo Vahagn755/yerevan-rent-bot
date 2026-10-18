@@ -1,4 +1,5 @@
 """Mini App: serves the web page and a small JSON API authenticated with Telegram initData."""
+import hashlib
 import logging
 import time
 from collections import OrderedDict
@@ -41,6 +42,11 @@ def ApiError(status: int, code: str) -> web.HTTPException:  # noqa: N802 - used 
 
 
 # ---------- helpers ----------
+def listing_photos(row: Mapping) -> list[str]:
+    photos = [p for p in (row["photos"] or "").split(",") if p]
+    return photos or ([row["photo_id"]] if row["photo_id"] else [])
+
+
 def serialize(row: Mapping, lang: str, viewer_id: int) -> dict:
     return {
         "id": row["id"],
@@ -57,6 +63,9 @@ def serialize(row: Mapping, lang: str, viewer_id: int) -> dict:
         "phone_raw": row["phone"],
         "link": row["link"],
         "photo": bool(row["photo_id"]),
+        # one URL per photo; the version part changes with the photo, so a stale browser cache never shows another listing's picture
+        "photos": [f"/api/photo/{row['id']}?n={i}&v={hashlib.sha1(fid.encode()).hexdigest()[:10]}"
+                   for i, fid in enumerate(listing_photos(row))],
         "created": row["created"],
         "status": row["status"],
         "mine": row["owner_id"] == viewer_id,
@@ -268,17 +277,23 @@ async def api_report(request: web.Request) -> web.Response:
 
 async def api_photo(request: web.Request) -> web.Response:
     listing_id = int(request.match_info["id"])
+    try:
+        n = int(request.query.get("n", "0"))
+    except ValueError:
+        n = 0
+    listing = await request.app[DB].get_listing(listing_id)
+    photos = listing_photos(listing) if listing and listing["status"] != "blocked" else []
+    if not 0 <= n < len(photos):
+        raise web.HTTPNotFound()
+    file_id = photos[n]
     cache: OrderedDict = request.app[PHOTOS]
-    if listing_id in cache:
-        cache.move_to_end(listing_id)
-        body = cache[listing_id]
+    if file_id in cache:
+        cache.move_to_end(file_id)
+        body = cache[file_id]
     else:
-        listing = await request.app[DB].get_listing(listing_id)
-        if not listing or not listing["photo_id"] or listing["status"] == "blocked":
-            raise web.HTTPNotFound()
-        buf = await request.app[BOT].download(listing["photo_id"])
+        buf = await request.app[BOT].download(file_id)
         body = buf.getvalue()
-        cache[listing_id] = body
+        cache[file_id] = body
         if len(cache) > PHOTO_CACHE_SIZE:
             cache.popitem(last=False)
     return web.Response(body=body, content_type="image/jpeg",

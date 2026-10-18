@@ -104,6 +104,10 @@ nav.tabs .post-tab .plus svg { width: 20px; height: 20px; color: var(--apricot-i
 .card { background: var(--surface); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); display: flex; flex-direction: column; }
 .media { position: relative; aspect-ratio: 4 / 3; background: var(--tuff); }
 .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slides { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.slides::-webkit-scrollbar { display: none; }
+.slides img { flex: 0 0 100%; scroll-snap-align: center; }
+.media .count { position: absolute; right: 12px; bottom: 12px; background: rgba(0,0,0,.55); color: #fff; font-size: 13px; padding: 3px 9px; border-radius: 999px; }
 .media .tuff-bg { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 14px 16px; }
 .media .tuff-bg span { font: 700 28px/1 var(--serif); color: var(--tuff-ink); letter-spacing: -0.01em; }
 .media .price-tag { position: absolute; left: 12px; top: 12px; background: var(--surface); color: var(--ink); border-radius: 12px; padding: 6px 10px; font: 700 20px/1 var(--serif); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
@@ -577,9 +581,10 @@ const HEART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 
 function cardHTML(it, opts = {}) {
   state.cache[it.id] = it;
-  const photo = opts.photoUrl || (it.photo ? `/api/photo/${it.id}` : null);
-  const media = photo
-    ? `<img loading="lazy" src="${photo}" alt="">`
+  const photos = opts.photoUrl ? [opts.photoUrl] : (it.photos || []);
+  const media = photos.length
+    ? `<div class="slides">${photos.map((u, i) => `<img loading="lazy" src="${u}" alt="" data-i="${i}">`).join("")}</div>` +
+      (photos.length > 1 ? `<span class="count">1 / ${photos.length}</span>` : "")
     : `<div class="tuff-bg"><span>${esc(dname(it.district) || "Երևան")}</span></div>`;
   const meta = [roomsLabel(it.rooms), dname(it.district)].filter(Boolean).join(", ");
   const badges = [];
@@ -634,6 +639,12 @@ function onCardClick(e) {
   }
 }
 $("#feed-list").addEventListener("click", onCardClick);
+document.addEventListener("scroll", e => {
+  const s = e.target; if (!(s instanceof Element) || !s.classList.contains("slides")) return;
+  const c = s.parentElement.querySelector(".count"); if (!c) return;
+  const i = Math.round(s.scrollLeft / s.clientWidth) + 1;
+  c.textContent = `${i} / ${s.children.length}`;
+}, true);
 $("#my-list").addEventListener("click", onCardClick);
 
 function report(id) {
