@@ -6,7 +6,7 @@ import hashlib
 import re
 from dataclasses import dataclass
 
-from .districts import DISTRICTS
+from .districts import DISTRICTS, STREETS
 
 USD_RANGE = (50, 20_000)
 AMD_RANGE = (20_000, 10_000_000)
@@ -53,6 +53,7 @@ _DISTRICT_RE = {
     key: re.compile(r"(?<!\w)(?:" + "|".join(d["aliases"]) + ")")
     for key, d in DISTRICTS.items()
 }
+_STREET_RE = {key: re.compile(r"(?<!\w)(?:" + "|".join(names) + ")") for key, names in STREETS.items()}
 
 
 @dataclass
@@ -171,14 +172,19 @@ def parse_rooms(text: str) -> int | None:
     return None
 
 
-def parse_district(text: str) -> str | None:
-    low = text.lower()
+def _first_match(low: str, patterns: dict[str, re.Pattern]) -> str | None:
     best: tuple[int, str] | None = None
-    for key, rx in _DISTRICT_RE.items():
+    for key, rx in patterns.items():
         m = rx.search(low)
         if m and (best is None or m.start() < best[0]):
             best = (m.start(), key)
     return best[1] if best else None
+
+
+def parse_district(text: str) -> str | None:
+    """District named in the text; otherwise guessed from a street, square or metro station."""
+    low = text.lower()
+    return _first_match(low, _DISTRICT_RE) or _first_match(low, _STREET_RE)
 
 
 _PETS_WORD = r"(?:живот|կենդանի|pets?\b)"

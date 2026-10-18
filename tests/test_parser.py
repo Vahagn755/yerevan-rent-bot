@@ -60,6 +60,21 @@ class FieldsTest(unittest.TestCase):
         for text, key in cases.items():
             self.assertEqual(parse_district(text), key, text)
 
+    def test_streets_and_landmarks(self):
+        cases = {"ул. Молдовакан, 5 этаж": "nor_nork", "Աբովյան փողոց, 3 սենյակ": "kentron",
+                 "near Cascade, 2 bedroom": "kentron", "Комитаса 12": "arabkir", "Халабяна 20": "ajapnyak",
+                 "Բագրատունյաց պողոտա": "shengavit", "рядом с метро Барекамутюн": "arabkir",
+                 "Nor Aresh, 1 room": "erebuni", "Ачаряна": "avan"}
+        for text, key in cases.items():
+            self.assertEqual(parse_district(text), key, text)
+
+    def test_named_district_wins_over_street(self):
+        self.assertEqual(parse_district("Նոր Նորք, Մոլդովական փողոց"), "nor_nork")
+        self.assertEqual(parse_district("Аван, ул. Абовяна (не центр)"), "avan")
+
+    def test_names_that_look_like_streets(self):
+        self.assertIsNone(parse_district("Гаяне, хозяйка квартиры"))
+
     def test_deposit_is_not_avan(self):
         self.assertIsNone(parse_district("ավանդ 1 ամիս"))
         self.assertIsNone(parse_district("аванс за 2 месяца"))
