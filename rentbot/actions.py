@@ -7,7 +7,8 @@ from aiogram import Bot
 
 from .config import Config
 from .db import Database
-from .parser import format_phone, text_hash
+from .parser import (format_phone, parse_district, parse_listing, parse_price, parse_rooms,
+                     text_hash)
 from .services import broadcast, spawn
 
 log = logging.getLogger(__name__)
@@ -68,6 +69,50 @@ async def publish_listing(bot: Bot, db: Database, owner_id: int, item: NewListin
 
     spawn(notify())
     return listing_id
+
+
+IMPORT_DESC_MAX = 700
+
+
+@dataclass
+class ImportResult:
+    status: str  # 'ok' | 'not_listing' | 'blacklisted' | 'duplicate'
+    listing_id: int | None = None
+    missing: tuple[str, ...] = ()
+
+
+async def import_post(bot: Bot, db: Database, cfg: Config, text: str, photo_id: str | None,
+                      link: str | None, on_sent=None) -> ImportResult:
+    """Turns a channel post (or a post an admin forwarded) into a listing and sends it out."""
+    parsed = parse_listing(text, cfg.amd_per_usd)
+    if not parsed:
+        missing = []
+        if not parse_price(text, cfg.amd_per_usd):
+            missing.append("price")
+        if parse_district(text) is None and parse_rooms(text) is None:
+            missing.append("district_or_rooms")
+        return ImportResult("not_listing", missing=tuple(missing))
+    if await db.is_blacklisted(parsed.phone):
+        return ImportResult("blacklisted")
+    h = text_hash(text)
+    if await db.is_duplicate(h, int(time.time()) - DUPLICATE_WINDOW):
+        return ImportResult("duplicate")
+
+    listing_id = await db.add_listing(
+        source="channel", district=parsed.district, rooms=parsed.rooms,
+        price_amount=parsed.price.amount, currency=parsed.price.currency,
+        price_usd=parsed.price.usd, pets=parsed.pets, description=text[:IMPORT_DESC_MAX],
+        phone=parsed.phone, photo_id=photo_id, link=link, text_hash=h,
+    )
+    listing = await db.get_listing(listing_id)
+
+    async def notify() -> None:
+        n = await broadcast(bot, db, listing)
+        if on_sent:
+            await on_sent(n)
+
+    spawn(notify())
+    return ImportResult("ok", listing_id)
 
 
 async def report_listing(bot: Bot, db: Database, cfg: Config, listing_id: int, user_id: int,
