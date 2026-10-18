@@ -18,7 +18,8 @@ BASALT = (58, 44, 42)
 APRICOT = (240, 162, 59)
 APRICOT_LIGHT = (255, 214, 150)
 INK = (42, 37, 34)
-SNOW = (252, 248, 246)
+PLUM = (46, 36, 48)
+CREAM = (250, 242, 236)
 
 FONT_SERIF_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
 FONT_SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -89,85 +90,116 @@ def key_shape(d: ImageDraw.ImageDraw, cx, cy, s, color):
     d.rectangle([cx, cy + s * 0.41, cx + s * 0.13, cy + s * 0.48], fill=color)
 
 
+def pin_path(cx, cy, r, tip_y, steps=80):
+    """Map pin: a circle that narrows to a point at the bottom."""
+    a0 = math.asin(r / (tip_y - cy))  # tangent angle from the tip
+    pts = [(cx, tip_y)]
+    start, end = math.pi / 2 + a0, math.pi / 2 - a0 + 2 * math.pi
+    for i in range(steps + 1):
+        a = start + (end - start) * i / steps
+        pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    return pts
+
+
 def avatar() -> None:
+    """Map pin built from pink tuff blocks, with a lit arched door: home, in Yerevan."""
     W = 640 * S
-    img = tuff_wall(W, W, block_w=W // 4, block_h=W // 8)
-    d = ImageDraw.Draw(img)
-    cx, top, bottom, half = W // 2, int(W * 0.17), int(W * 0.92), int(W * 0.25)
+    bg = glow((W, W), (74, 58, 78), PLUM, (W // 2, int(W * 0.35)), W * 0.75)
+    img = bg
+    cx, cy, r, tip = W // 2, int(W * 0.42), int(W * 0.30), int(W * 0.90)
+    pin = pin_path(cx, cy, r, tip)
 
-    # carved frame stone around the doorway
-    frame = arch_path(cx, top - W * 0.05, bottom, half + W * 0.05)
     shadow = Image.new("L", (W, W), 0)
-    ImageDraw.Draw(shadow).polygon([(x + W * 0.012, y + W * 0.018) for x, y in frame], fill=120)
-    img.paste((70, 40, 34), mask=shadow.filter(ImageFilter.GaussianBlur(W * 0.02)))
-    d.polygon(frame, fill=mix(TUFF, (255, 240, 232), 0.35))
+    ImageDraw.Draw(shadow).polygon([(x, y + W * 0.02) for x, y in pin], fill=150)
+    img.paste((20, 14, 22), mask=shadow.filter(ImageFilter.GaussianBlur(W * 0.025)))
 
-    # the doorway: dark basalt reveal, then warm apricot light from inside
-    d.polygon(arch_path(cx, top, bottom, half), fill=BASALT)
-    inner = arch_path(cx, top + W * 0.03, bottom, half - W * 0.03)
-    light = glow((W, W), APRICOT_LIGHT, APRICOT, (cx, int(W * 0.62)), W * 0.42)
+    wall = tuff_wall(W, W, block_w=W // 7, block_h=W // 14, seed=5)
     mask = Image.new("L", (W, W), 0)
-    ImageDraw.Draw(mask).polygon(inner, fill=255)
-    img.paste(light, mask=mask)
+    ImageDraw.Draw(mask).polygon(pin, fill=255)
+    img.paste(wall, mask=mask)
+    d = ImageDraw.Draw(img)
 
-    key_shape(d, cx, int(W * 0.58), W * 0.36, INK)
+    # arched door in the middle of the pin, warm light inside
+    half, top, bottom = int(r * 0.42), cy - int(r * 0.55), cy + int(r * 0.62)
+    d.polygon(arch_path(cx, top - S * 10, bottom + S * 4, half + S * 10), fill=mix(TUFF, CREAM, 0.5))
+    d.polygon(arch_path(cx, top, bottom, half), fill=BASALT)
+    door = arch_path(cx, top + S * 9, bottom, half - S * 9)
+    light = glow((W, W), APRICOT_LIGHT, APRICOT, (cx, bottom), r * 0.9)
+    m = Image.new("L", (W, W), 0)
+    ImageDraw.Draw(m).polygon(door, fill=255)
+    img.paste(light, mask=m)
+    d.ellipse([cx + half * 0.35, cy + r * 0.05, cx + half * 0.35 + S * 14, cy + r * 0.05 + S * 14], fill=INK)  # knob
     img.resize((640, 640), Image.LANCZOS).save(OUT / "avatar.png", optimize=True)
 
 
+def window(img, d, x, y, w, h, lit, rnd):
+    frame = mix(TUFF, CREAM, 0.45)
+    d.polygon(arch_path(x, y - S * 5, y + h + S * 4, w // 2 + S * 5, 32), fill=frame)
+    if lit:
+        g = glow((w + S * 2, h + S * 2), APRICOT_LIGHT, APRICOT, (w // 2, int(h * 0.75)), h)
+        m = Image.new("L", g.size, 0)
+        ImageDraw.Draw(m).polygon(arch_path(w // 2 + S, 0, h, w // 2, 32), fill=255)
+        img.paste(g, (x - w // 2 - S, y), m)
+    else:
+        d.polygon(arch_path(x, y, y + h, w // 2, 32), fill=(86, 66, 72))
+    # mullion and transom
+    d.line([(x, y + w // 2), (x, y + h)], fill=frame, width=S * 3)
+    d.line([(x - w // 2, y + int(h * 0.42)), (x + w // 2, y + int(h * 0.42))], fill=frame, width=S * 3)
+
+
 def description() -> None:
+    """Evening facade of a tuff apartment house; one balcony has a "for rent" tag."""
     W, H = 640 * S, 360 * S
-    # dawn sky over Yerevan
-    sky = Image.new("RGB", (W, H))
-    sd = ImageDraw.Draw(sky)
-    for y in range(H):
-        sd.line([(0, y), (W, y)], fill=mix((255, 226, 196), (196, 216, 236), (1 - y / H) ** 1.3))
-    img = sky
+    img = glow((W, H), (70, 54, 74), PLUM, (int(W * 0.25), int(H * 0.3)), W * 0.8)
     d = ImageDraw.Draw(img)
 
-    # Ararat: Masis (big) and Sis (small), with snow caps
-    base = int(H * 0.74)
-    masis = [(W * 0.42, base), (W * 0.72, H * 0.24), (W * 0.77, H * 0.235), (W * 1.08, base)]
-    sis = [(W * 0.70, base), (W * 0.88, H * 0.46), (W * 1.02, base)]
-    far = (150, 158, 188)
-    d.polygon(sis, fill=mix(far, (200, 206, 224), 0.35))
-    d.polygon(masis, fill=far)
-    snow = [(W * 0.645, H * 0.33), (W * 0.72, H * 0.24), (W * 0.77, H * 0.235), (W * 0.84, H * 0.34),
-            (W * 0.80, H * 0.36), (W * 0.775, H * 0.33), (W * 0.74, H * 0.37), (W * 0.70, H * 0.335), (W * 0.67, H * 0.355)]
-    d.polygon(snow, fill=SNOW)
-    d.polygon([(W * 0.86, H * 0.49), (W * 0.88, H * 0.46), (W * 0.90, H * 0.49), (W * 0.885, H * 0.50)], fill=SNOW)
+    # facade on the right
+    fx = int(W * 0.50)
+    wall = tuff_wall(W - fx, H, block_w=W // 14, block_h=H // 16, seed=21)
+    img.paste(wall, (fx, 0))
+    d.rectangle([fx, 0, fx + S * 6, H], fill=mix(TUFF_DARK, BASALT, 0.35))  # building edge shadow
 
-    # row of tuff buildings with arched windows, some lit
-    rnd = random.Random(3)
-    wall = tuff_wall(W, H, block_w=W // 16, block_h=H // 22, seed=11)
-    x = 0
-    while x < W:
-        bw = rnd.choice([int(W * 0.16), int(W * 0.2), int(W * 0.13)])
-        bh = rnd.choice([int(H * 0.25), int(H * 0.30), int(H * 0.21)])
-        top = H - bh
-        m = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(m).rectangle([x, top, x + bw - S * 3, H], fill=255)
-        img.paste(wall, mask=m)
-        d.rectangle([x, top, x + bw - S * 3, top + S * 6], fill=mix(TUFF_DARK, BASALT, 0.25))  # cornice
-        cols = max(2, bw // int(W * 0.055))
-        ww = int(bw / cols * 0.48)
+    rnd = random.Random(8)
+    cols, floors = 3, 3
+    fw = W - fx
+    ww, wh = int(fw / cols * 0.42), int(H / floors * 0.58)
+    lit_map = [[1, 0, 1], [0, 1, 0], [1, 1, 0]]
+    for f in range(floors):
+        y0 = int(H * 0.06) + f * int(H / floors)
+        # cornice under each floor
+        d.rectangle([fx, y0 + wh + S * 14, W, y0 + wh + S * 20], fill=mix(TUFF_DARK, BASALT, 0.2))
         for c in range(cols):
-            wx = x + int((c + 0.5) * bw / cols)
-            for r in range(2):
-                wy = top + int(bh * (0.22 + r * 0.38))
-                lit = rnd.random() < 0.45
-                color = APRICOT_LIGHT if lit else (92, 70, 68)
-                d.polygon(arch_path(wx, wy, wy + int(bh * 0.22), ww // 2, 24), fill=color)
-        x += bw
+            x = fx + int((c + 0.5) * fw / cols)
+            window(img, d, x, y0, ww, wh, lit_map[f][c], rnd)
+        if f == 1:  # balcony with a railing across the middle window
+            bx0, bx1 = fx + int(0.5 * fw / cols) + ww, fx + int(2.5 * fw / cols) - ww
+            mid = fx + int(1.5 * fw / cols)
+            by = y0 + wh + S * 2
+            bx0, bx1 = mid - int(ww * 0.95), mid + int(ww * 0.95)
+            d.rectangle([bx0, by, bx1, by + S * 6], fill=BASALT)
+            for bx in range(bx0, bx1 + 1, S * 9):
+                d.line([(bx, by - int(wh * 0.28)), (bx, by)], fill=BASALT, width=S * 2)
+            d.rectangle([bx0, by - int(wh * 0.28), bx1, by - int(wh * 0.28) + S * 3], fill=BASALT)
+            # hanging tag
+            tag_font = font(FONT_SANS.replace("DejaVuSans.ttf", "DejaVuSans-Bold.ttf"), 12 * S)
+            label = "Վարձով"
+            tw = d.textlength(label, font=tag_font)
+            tx0, ty0 = mid - tw / 2 - S * 10, by + S * 22
+            d.line([(mid - tw / 3, by + S * 6), (mid - tw / 3, ty0)], fill=CREAM, width=S * 2)
+            d.line([(mid + tw / 3, by + S * 6), (mid + tw / 3, ty0)], fill=CREAM, width=S * 2)
+            d.rounded_rectangle([tx0, ty0, mid + tw / 2 + S * 10, ty0 + S * 26], radius=S * 6, fill=APRICOT)
+            d.text((mid - tw / 2, ty0 + S * 5), label, font=tag_font, fill=INK)
 
-    # text panel
-    title = font(FONT_SERIF_BOLD, 34 * S)
-    sub = font(FONT_SANS, 15 * S)
-    tx, ty = 26 * S, 26 * S
-    d.text((tx, ty), "Վարձով տուն", font=title, fill=INK)
-    d.text((tx, ty + 42 * S), "Երևանում", font=title, fill=INK)
-    lines = ["Նոր հայտարարություններ՝ ըստ քո ֆիլտրի,", "առանց միջնորդների և խաբեբաների"]
+    # text
+    title = font(FONT_SERIF_BOLD, 33 * S)
+    sub = font(FONT_SANS, 14 * S)
+    tx, ty = 28 * S, 44 * S
+    d.text((tx, ty), "Վարձով տուն", font=title, fill=CREAM)
+    d.text((tx, ty + 42 * S), "Երևանում", font=title, fill=CREAM)
+    d.rounded_rectangle([tx, ty + 98 * S, tx + 44 * S, ty + 102 * S], radius=S * 2, fill=APRICOT)
+    lines = ["Նոր հայտարարություններ՝", "ըստ քո ֆիլտրի, առանց", "միջնորդների և խաբեբաների"]
     for i, line in enumerate(lines):
-        d.text((tx, ty + 94 * S + i * 21 * S), line, font=sub, fill=mix(INK, (120, 100, 92), 0.35))
+        d.text((tx, ty + 116 * S + i * 21 * S), line, font=sub, fill=mix(CREAM, PLUM, 0.28))
     img.resize((640, 360), Image.LANCZOS).save(OUT / "description.png", optimize=True)
 
 
